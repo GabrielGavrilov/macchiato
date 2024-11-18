@@ -3,14 +3,14 @@ import org.gabrielgavrilov.macchiato.annotations.Entity;
 import org.gabrielgavrilov.macchiato.annotations.Table;
 
 @Entity
-@Table
+@Table(name = "users")
 public class User {
 
     @Column(name = "first_name")
-    private String firstName;
+    public String firstName;
 
     @Column(name = "last_name")
-    private String lastName;
+    public String lastName;
 
     public static User newInstance(String firstName, String lastName) {
         User user = new User();
