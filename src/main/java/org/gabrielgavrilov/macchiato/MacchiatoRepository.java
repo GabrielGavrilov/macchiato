@@ -14,22 +14,10 @@ import java.util.List;
 
 public class MacchiatoRepository<T> {
 
-    private Controller _CONTROLLER = new Controller("jdbc:sqlite:test.db");
     private Class<T> _ENTITY;
 
     public MacchiatoRepository() {
         this._ENTITY = getGenericType();
-//        if(clazz.isAnnotationPresent(Table.class)) {
-//            Table table = clazz.getAnnotation(Table.class);
-//
-//            for(Field field : clazz.getDeclaredFields()) {
-//                if(field.isAnnotationPresent(Column.class)) {
-//                    Column column = field.getAnnotation(Column.class);
-//                    System.out.println(column.name());
-//                }
-//            }
-//
-//        }
     }
 
 
@@ -72,42 +60,22 @@ public class MacchiatoRepository<T> {
     }
 
     public void save(Object entity) {
-        List<Field> fields = new ArrayList<>();
+        List<String> fields = new ArrayList<>();
+        List<String> values = new ArrayList<>();
         Table table = this._ENTITY.getAnnotation(Table.class);
-        String query = "INSERT INTO " + table.name() + "(";
 
-        for(Field field : this._ENTITY.getDeclaredFields()) {
-            String columnName = field.getAnnotation(Column.class).name();
-            query += columnName + ", ";
-            fields.add(field);
-        }
-
-        query = query.substring(0, query.length() - 2);
-        query += ") VALUES(";
-
-
-
-        try(
-                Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
-                Statement statement = conn.createStatement();
-        ) {
-
-
-
-            for(Field field : fields) {
-                String data = (String)field.get(entity);
-                query += String.format("'%s', ", data);
+        try {
+            for(Field field : this._ENTITY.getDeclaredFields()) {
+                String columnName = field.getAnnotation(Column.class).name();
+                fields.add(columnName);
+                values.add((String)field.get(entity));
             }
-            query = query.substring(0, query.length() - 2);
-            query += ")";
 
-            statement.executeUpdate(query);
-            ResultSet rs = statement.executeQuery("SELECT * FROM " + table.name());
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println(QueryBuilder.save(table.name(), fields, values));
         }
-
+        catch(Exception e) {
+            e.printStackTrace();
+        }
 
     }
 

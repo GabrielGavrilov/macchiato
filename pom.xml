@@ -15,6 +15,11 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.47.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>6.2.0</version>
+        </dependency>
 
     </dependencies>
 
