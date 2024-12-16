@@ -30,4 +30,21 @@ public class QueryBuilder {
         );
     }
 
+    public static String joinTable(String tableName, String joinTable, String joinColumn, List<String> joinFields) {
+        List<String> transformedFields = joinFields
+                .stream()
+                .map(field -> String.format("%s.%s",joinTable,field))
+                .collect(Collectors.toList());
+        return String.format(
+                "SELECT %s\nFROM %s\nJOIN %s\nON (%s.%s = %s.%s);",
+                String.join(", ", transformedFields),
+                tableName,
+                joinTable,
+                tableName,
+                joinColumn,
+                joinTable,
+                joinColumn
+        );
+    }
+
 }

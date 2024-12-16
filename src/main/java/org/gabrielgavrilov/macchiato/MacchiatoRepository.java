@@ -2,6 +2,7 @@ package org.gabrielgavrilov.macchiato;
 
 import org.gabrielgavrilov.macchiato.annotations.Column;
 import org.gabrielgavrilov.macchiato.annotations.Id;
+import org.gabrielgavrilov.macchiato.annotations.JoinTable;
 import org.gabrielgavrilov.macchiato.annotations.Table;
 
 import java.lang.reflect.Field;
@@ -35,10 +36,16 @@ public class MacchiatoRepository<T> {
                 T entity = (T) this.ENTITY.getDeclaredConstructor().newInstance();
 
                 for(Field field : fields) {
-                    field.setAccessible(true);
-                    String columnName = field.getAnnotation(Column.class).name();
-                    Object value = rs.getObject(columnName);
-                    field.set(entity, value);
+                    if(field.isAnnotationPresent(Column.class)) {
+                        field.setAccessible(true);
+                        String columnName = field.getAnnotation(Column.class).name();
+                        Object value = rs.getObject(columnName);
+                        field.set(entity, value);
+                    }
+                    if(field.isAnnotationPresent(JoinTable.class)) {
+                        JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
+                        joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName());
+                    }
                 }
 
                 entities.add(entity);
@@ -59,6 +66,10 @@ public class MacchiatoRepository<T> {
         for(Field field : this.ENTITY.getDeclaredFields()) {
             if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
                 idField = field.getAnnotation(Column.class).name();
+            }
+            if(field.isAnnotationPresent(JoinTable.class)) {
+                JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
+                joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName());
             }
         }
 
@@ -81,6 +92,18 @@ public class MacchiatoRepository<T> {
         catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void joinTable(Class entity, String table, String joinTable, String joinColumn) {
+        List<String> joinFields = new ArrayList<>();
+
+        for(Field field : entity.getDeclaredFields()) {
+            if(field.isAnnotationPresent(Column.class)) {
+                joinFields.add(field.getAnnotation(Column.class).name());
+            }
+        }
+
+        System.out.println(QueryBuilder.joinTable(table, joinTable, joinColumn, joinFields));
     }
 
     private Class<T> getGenericType() {

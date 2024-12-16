@@ -10,8 +10,9 @@ public class MacchiatoTest {
     public static void main(String[] args) {
 
         UserRepository userRepository = new UserRepository();
+        UserClassRepository userClassRepository = new UserClassRepository();
 
-        userRepository.findById(Integer.toString(2));
+        userClassRepository.findById(Integer.toString(1));
 
 
     }
