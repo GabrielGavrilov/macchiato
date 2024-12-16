@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 public class QueryBuilder {
 
     public static String getAll(String tableName) {
-        return String.format("SELECT * FROM %s;", tableName).toString();
+        return String.format("SELECT * FROM %s;", tableName);
     }
 
     public static String save(String tableName, List<String> fields, List<String> values) {
@@ -21,6 +21,13 @@ public class QueryBuilder {
         );
     }
 
-
+    public static String getById(String tableName, String idField, String idValue) {
+        return String.format(
+                "SELECT * FROM %s WHERE %s = %s;",
+                tableName,
+                idField,
+                idValue
+        );
+    }
 
 }

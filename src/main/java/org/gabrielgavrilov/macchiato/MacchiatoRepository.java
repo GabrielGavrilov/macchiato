@@ -51,6 +51,14 @@ public class MacchiatoRepository<T> {
         return entities;
     }
 
+//    public T getById() {
+//        T entity = null;
+//        String table = this.ENTITY.getAnnotation(Table.class).name();
+//        List<Field>
+//
+//        return entity;
+//    }
+
     public void save(Object entity) {
         String table = this.ENTITY.getAnnotation(Table.class).name();
         List<String> fields = new ArrayList<>();
@@ -59,10 +67,10 @@ public class MacchiatoRepository<T> {
         try {
             for(Field field : this.ENTITY.getDeclaredFields()) {
                 fields.add(field.getAnnotation(Column.class).name());
-                values.add((String)field.get(entity));
+                values.add(field.get(entity).toString());
             }
 
-            System.out.println(QueryBuilder.save(table, fields, values));
+            this.DATA_SOURCE.executeQuery(QueryBuilder.save(table, fields, values));
         }
         catch(Exception e) {
             e.printStackTrace();

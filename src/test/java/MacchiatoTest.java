@@ -11,11 +11,16 @@ public class MacchiatoTest {
 
         UserRepository userRepository = new UserRepository();
 
+        User user1 = User.newInstance(2, "Mark", "Fishbach");
+
+        userRepository.save(user1);
+
         List<User> users = userRepository.getAll();
 
         for(User user : users) {
-            System.out.println(user.firstName);
+            System.out.println(user.id + " " + user.firstName);
         }
+
 
     }
 }
