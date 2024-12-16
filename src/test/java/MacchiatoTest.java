@@ -12,8 +12,9 @@ public class MacchiatoTest {
         UserRepository userRepository = new UserRepository();
         UserClassRepository userClassRepository = new UserClassRepository();
 
-        userClassRepository.findById(Integer.toString(1));
+        UserClass userClass = userClassRepository.findById(Integer.toString(0));
 
+        System.out.println(userClass.user.firstName);
 
     }
 }

@@ -44,7 +44,7 @@ public class MacchiatoRepository<T> {
                     }
                     if(field.isAnnotationPresent(JoinTable.class)) {
                         JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
-                        joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName());
+                        field.set(entity, joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
                     }
                 }
 
@@ -58,7 +58,7 @@ public class MacchiatoRepository<T> {
         return entities;
     }
 
-    public void findById(String id) {
+    public T findById(String id) {
         T entity = null;
         String table = this.ENTITY.getAnnotation(Table.class).name();
         String idField = null;
@@ -67,13 +67,31 @@ public class MacchiatoRepository<T> {
             if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
                 idField = field.getAnnotation(Column.class).name();
             }
-            if(field.isAnnotationPresent(JoinTable.class)) {
-                JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
-                joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName());
-            }
         }
 
-        System.out.println(QueryBuilder.getById(table, idField, id));
+        try {
+            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.getById(table, idField, id));
+            entity = (T) this.ENTITY.getDeclaredConstructor().newInstance();
+
+            for(Field field : this.ENTITY.getDeclaredFields()) {
+                if(field.isAnnotationPresent(Column.class)) {
+                    field.setAccessible(true);
+                    String columnName = field.getAnnotation(Column.class).name();
+                    Object value = rs.getObject(columnName);
+                    field.set(entity, value);
+                }
+                if(field.isAnnotationPresent(JoinTable.class)) {
+                    JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
+                    field.set(entity,joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
+                }
+            }
+
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return entity;
     }
 
     public void save(Object entity) {
@@ -94,8 +112,9 @@ public class MacchiatoRepository<T> {
         }
     }
 
-    private void joinTable(Class entity, String table, String joinTable, String joinColumn) {
+    private Object joinTable(Class entity, String table, String joinTable, String joinColumn) {
         List<String> joinFields = new ArrayList<>();
+        Object result = null;
 
         for(Field field : entity.getDeclaredFields()) {
             if(field.isAnnotationPresent(Column.class)) {
@@ -103,7 +122,26 @@ public class MacchiatoRepository<T> {
             }
         }
 
-        System.out.println(QueryBuilder.joinTable(table, joinTable, joinColumn, joinFields));
+        try {
+            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, joinFields));
+
+            while(rs.next()) {
+                result = entity.getDeclaredConstructor().newInstance();
+
+                for(Field field : result.getClass().getDeclaredFields()) {
+                    field.setAccessible(true);
+                    String columnName = field.getAnnotation(Column.class).name();
+                    Object value = rs.getObject(columnName);
+                    field.set(result, value);
+                }
+            }
+
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     private Class<T> getGenericType() {

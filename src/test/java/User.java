@@ -9,7 +9,7 @@ public class User {
 
     @Id
     @Column(name = "user_id")
-    public int id;
+    public int userId;
 
     @Column(name = "first_name")
     public String firstName;
@@ -19,7 +19,7 @@ public class User {
 
     public static User newInstance(int id, String firstName, String lastName) {
         User user = new User();
-        user.id = id;
+        user.userId = id;
         user.firstName = firstName;
         user.lastName = lastName;
         return user;
