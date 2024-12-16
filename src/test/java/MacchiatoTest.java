@@ -1,4 +1,5 @@
 import org.gabrielgavrilov.macchiato.Controller;
+import org.gabrielgavrilov.macchiato.DataSource;
 import org.gabrielgavrilov.macchiato.Macchiato;
 
 import java.sql.*;
@@ -10,11 +11,11 @@ public class MacchiatoTest {
 
         UserRepository userRepository = new UserRepository();
 
-        User user = User.newInstance("John", "Doe");
-        User user2 = User.newInstance("Jane", "Doe");
+        List<User> users = userRepository.getAll();
 
-        userRepository.save(user);
-        userRepository.save(user2);
+        for(User user : users) {
+            System.out.println(user.firstName);
+        }
 
     }
 }

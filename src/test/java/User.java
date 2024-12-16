@@ -12,14 +12,10 @@ public class User {
     @Column(name = "last_name")
     public String lastName;
 
-    @Column(name = "occupation")
-    public String occupation;
-
     public static User newInstance(String firstName, String lastName) {
         User user = new User();
         user.firstName = firstName;
         user.lastName = lastName;
-        user.occupation = "NEET";
         return user;
     }
 
