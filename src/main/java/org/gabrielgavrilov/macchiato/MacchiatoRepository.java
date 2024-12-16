@@ -1,6 +1,7 @@
 package org.gabrielgavrilov.macchiato;
 
 import org.gabrielgavrilov.macchiato.annotations.Column;
+import org.gabrielgavrilov.macchiato.annotations.Id;
 import org.gabrielgavrilov.macchiato.annotations.Table;
 
 import java.lang.reflect.Field;
@@ -17,7 +18,6 @@ public class MacchiatoRepository<T> {
 
     public MacchiatoRepository() {
     }
-
 
     public List<T> getAll() {
         List<T> entities = new ArrayList<>();
@@ -51,13 +51,19 @@ public class MacchiatoRepository<T> {
         return entities;
     }
 
-//    public T getById() {
-//        T entity = null;
-//        String table = this.ENTITY.getAnnotation(Table.class).name();
-//        List<Field>
-//
-//        return entity;
-//    }
+    public void findById(String id) {
+        T entity = null;
+        String table = this.ENTITY.getAnnotation(Table.class).name();
+        String idField = null;
+
+        for(Field field : this.ENTITY.getDeclaredFields()) {
+            if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
+                idField = field.getAnnotation(Column.class).name();
+            }
+        }
+
+        System.out.println(QueryBuilder.getById(table, idField, id));
+    }
 
     public void save(Object entity) {
         String table = this.ENTITY.getAnnotation(Table.class).name();
