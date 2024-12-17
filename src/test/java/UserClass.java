@@ -1,5 +1,7 @@
 import org.gabrielgavrilov.macchiato.annotations.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "user_classes")
 public class UserClass {
@@ -14,6 +16,7 @@ public class UserClass {
     @Column(name = "class_id")
     public int classId;
 
+    @OneToOne
     @JoinTable(tableName = "users", columnName = "user_id")
     public User user;
 

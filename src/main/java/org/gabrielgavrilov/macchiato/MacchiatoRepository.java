@@ -82,7 +82,7 @@ public class MacchiatoRepository<T> {
                 }
                 if(field.isAnnotationPresent(JoinTable.class)) {
                     JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
-                    field.set(entity,joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
+                    field.set(entity, joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
                 }
             }
 
@@ -114,7 +114,7 @@ public class MacchiatoRepository<T> {
 
     private Object joinTable(Class entity, String table, String joinTable, String joinColumn) {
         List<String> joinFields = new ArrayList<>();
-        Object result = null;
+        Object foundEntity = null;
 
         for(Field field : entity.getDeclaredFields()) {
             if(field.isAnnotationPresent(Column.class)) {
@@ -126,13 +126,13 @@ public class MacchiatoRepository<T> {
             ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, joinFields));
 
             while(rs.next()) {
-                result = entity.getDeclaredConstructor().newInstance();
+                foundEntity = entity.getDeclaredConstructor().newInstance();
 
-                for(Field field : result.getClass().getDeclaredFields()) {
+                for(Field field : foundEntity.getClass().getDeclaredFields()) {
                     field.setAccessible(true);
                     String columnName = field.getAnnotation(Column.class).name();
                     Object value = rs.getObject(columnName);
-                    field.set(result, value);
+                    field.set(foundEntity, value);
                 }
             }
 
@@ -141,7 +141,7 @@ public class MacchiatoRepository<T> {
             e.printStackTrace();
         }
 
-        return result;
+        return foundEntity;
     }
 
     private Class<T> getGenericType() {
@@ -150,5 +150,4 @@ public class MacchiatoRepository<T> {
         ParameterizedType pt = (ParameterizedType) type;
         return (Class<T>)pt.getActualTypeArguments()[0];
     }
-
 }
