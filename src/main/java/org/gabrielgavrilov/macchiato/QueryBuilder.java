@@ -47,4 +47,13 @@ public class QueryBuilder {
         );
     }
 
+    public static String delete(String tableName, String idField, String idValue) {
+        return String.format(
+                "DELETE FROM %s WHERE %s = %s;",
+                tableName,
+                idField,
+                idValue
+        );
+    }
+
 }

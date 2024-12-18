@@ -1,9 +1,6 @@
 package org.gabrielgavrilov.macchiato;
 
-import org.gabrielgavrilov.macchiato.annotations.Column;
-import org.gabrielgavrilov.macchiato.annotations.Id;
-import org.gabrielgavrilov.macchiato.annotations.JoinTable;
-import org.gabrielgavrilov.macchiato.annotations.Table;
+import org.gabrielgavrilov.macchiato.annotations.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -42,7 +39,7 @@ public class MacchiatoRepository<T> {
                         Object value = rs.getObject(columnName);
                         field.set(entity, value);
                     }
-                    if(field.isAnnotationPresent(JoinTable.class)) {
+                    if(field.isAnnotationPresent(JoinTable.class) && field.isAnnotationPresent(OneToOne.class)) {
                         JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
                         field.set(entity, joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
                     }
@@ -80,7 +77,7 @@ public class MacchiatoRepository<T> {
                     Object value = rs.getObject(columnName);
                     field.set(entity, value);
                 }
-                if(field.isAnnotationPresent(JoinTable.class)) {
+                if(field.isAnnotationPresent(JoinTable.class) && field.isAnnotationPresent(OneToOne.class)) {
                     JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
                     field.set(entity, joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
                 }
@@ -101,8 +98,10 @@ public class MacchiatoRepository<T> {
 
         try {
             for(Field field : this.ENTITY.getDeclaredFields()) {
-                fields.add(field.getAnnotation(Column.class).name());
-                values.add(field.get(entity).toString());
+                if(field.isAnnotationPresent(Column.class)) {
+                    fields.add(field.getAnnotation(Column.class).name());
+                    values.add(field.get(entity).toString());
+                }
             }
 
             this.DATA_SOURCE.executeQuery(QueryBuilder.save(table, fields, values));
@@ -110,6 +109,24 @@ public class MacchiatoRepository<T> {
         catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void delete(Object entity) {
+        String table = this.ENTITY.getAnnotation(Table.class).name();
+    }
+
+    public void deleteById(String id) {
+        String table = this.ENTITY.getAnnotation(Table.class).name();
+        String idField = null;
+
+        for(Field field : this.ENTITY.getDeclaredFields()) {
+            if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
+                idField = field.getAnnotation(Column.class).name();
+            }
+        }
+
+
+
     }
 
     private Object joinTable(Class entity, String table, String joinTable, String joinColumn) {
