@@ -12,17 +12,17 @@ public class MacchiatoTest {
         RoleRepository roleRepository = new RoleRepository();
         UserRoleRepository userRoleRepository = new UserRoleRepository();
 
-        User user = User.newInstance(1, "John", "Doe");
+        User user = User.newInstance(3, "Mark", "Fishbach");
         Role role = Role.newInstance(1, "ADMIN");
         UserRole userRole = UserRole.newInstance(1, 1, 1);
 
-//        userRepository.save(user);
-//        roleRepository.save(role);
-//        userRoleRepository.save(userRole);
+        userRepository.deleteById(Integer.toString(2));
 
-        UserRole findUserRole = userRoleRepository.findById(Integer.toString(1));
+        List<User> users = userRepository.getAll();
 
-        System.out.println(String.format("%s %s", findUserRole.user.firstName, findUserRole.user.lastName));
+        users.forEach(u -> {
+            System.out.println(u.firstName + " " + u.lastName);
+        });
 
     }
 }

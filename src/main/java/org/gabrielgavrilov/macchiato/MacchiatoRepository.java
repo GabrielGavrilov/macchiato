@@ -7,6 +7,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MacchiatoRepository<T> {
@@ -111,10 +112,6 @@ public class MacchiatoRepository<T> {
         }
     }
 
-    public void delete(Object entity) {
-        String table = this.ENTITY.getAnnotation(Table.class).name();
-    }
-
     public void deleteById(String id) {
         String table = this.ENTITY.getAnnotation(Table.class).name();
         String idField = null;
@@ -125,8 +122,23 @@ public class MacchiatoRepository<T> {
             }
         }
 
+        try {
+            this.DATA_SOURCE.executeQuery(QueryBuilder.delete(table, idField, id));
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 
+    private void delete(String idColumn, String idValue) {
+        String table = this.ENTITY.getAnnotation(Table.class).name();
 
+        try {
+            this.DATA_SOURCE.executeQuery(QueryBuilder.delete(table, idColumn, idValue));
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private Object joinTable(Class entity, String table, String joinTable, String joinColumn) {
