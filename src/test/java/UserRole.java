@@ -15,11 +15,11 @@ public class UserRole {
     public int roleId;
 
     @OneToOne
-    @JoinTable(tableName = "users", columnName = "user_id")
+    @JoinColumn(table = "users", column = "user_id")
     public User user;
 
     @OneToOne
-    @JoinTable(tableName = "roles", columnName = "role_id")
+    @JoinColumn(table = "roles", column = "role_id")
     public Role role;
 
     public static UserRole newInstance(int userRoleId, int userId, int roleId) {

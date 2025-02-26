@@ -7,7 +7,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class MacchiatoRepository<T> {
@@ -40,9 +39,9 @@ public class MacchiatoRepository<T> {
                         Object value = rs.getObject(columnName);
                         field.set(entity, value);
                     }
-                    if(field.isAnnotationPresent(JoinTable.class) && field.isAnnotationPresent(OneToOne.class)) {
-                        JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
-                        field.set(entity, joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
+                    if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
+                        JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
+                        field.set(entity, joinColumn(field.getType(), table, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
                     }
                 }
 
@@ -78,9 +77,9 @@ public class MacchiatoRepository<T> {
                     Object value = rs.getObject(columnName);
                     field.set(entity, value);
                 }
-                if(field.isAnnotationPresent(JoinTable.class) && field.isAnnotationPresent(OneToOne.class)) {
-                    JoinTable joinTableAnnotation = field.getAnnotation(JoinTable.class);
-                    field.set(entity, joinTable(field.getType(), table, joinTableAnnotation.tableName(), joinTableAnnotation.columnName()));
+                if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
+                    JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
+                    field.set(entity, joinColumn(field.getType(), table, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
                 }
             }
 
@@ -141,7 +140,7 @@ public class MacchiatoRepository<T> {
         }
     }
 
-    private Object joinTable(Class entity, String table, String joinTable, String joinColumn) {
+    private Object joinColumn(Class entity, String table, String joinTable, String joinColumn) {
         List<String> joinFields = new ArrayList<>();
         Object foundEntity = null;
 

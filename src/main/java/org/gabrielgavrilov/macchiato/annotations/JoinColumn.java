@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface JoinTable {
-    public String tableName() default "";
-    public String columnName() default "";
+public @interface JoinColumn {
+    public String table() default "";
+    public String column() default "";
 }
