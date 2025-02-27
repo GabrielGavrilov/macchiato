@@ -10,11 +10,11 @@ public class QueryBuilder {
         return String.format("SELECT * FROM %s;", tableName);
     }
 
-    public static String save(String tableName, List<String> fields, List<String> values) {
+    public static String save(String tableName, List<String> columns, List<String> values) {
         return String.format(
                 "INSERT INTO %s (%s) VALUES (%s);",
                 tableName,
-                String.join(", ", fields),
+                String.join(", ", columns),
                 values.stream()
                         .map(value -> String.format("'%s'", value))
                         .collect(Collectors.joining(", "))
