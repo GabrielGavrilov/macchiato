@@ -11,7 +11,10 @@ import java.util.List;
 
 public class MacchiatoRepository<T> {
 
-    private final Class<T> ENTITY = getGenericType();
+    private final Class<T> ENTITY = this.getGenericType();
+    private final String ENTITY_TABLE_NAME = this.ENTITY.getAnnotation(Table.class).name();
+    private final Field[] ENTITY_DECLARED_FIELDS = this.ENTITY.getDeclaredFields();
+
     private final DataSource DATA_SOURCE = new DataSource();
 
     public MacchiatoRepository() {
@@ -19,29 +22,23 @@ public class MacchiatoRepository<T> {
 
     public List<T> getAll() {
         List<T> entities = new ArrayList<>();
-        String table = this.ENTITY.getAnnotation(Table.class).name();
-        List<Field> fields = new ArrayList<>();
-
-        for(Field field : this.ENTITY.getDeclaredFields()) {
-            fields.add(field);
-        }
 
         try {
-            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.getAll(table));
+            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.getAll(this.ENTITY_TABLE_NAME));
 
             while(rs.next()) {
-                T entity = (T) this.ENTITY.getDeclaredConstructor().newInstance();
+                T entity = this.ENTITY.getDeclaredConstructor().newInstance();
 
-                for(Field field : fields) {
+                for(Field field : this.getEntityFields()) {
                     if(field.isAnnotationPresent(Column.class)) {
                         field.setAccessible(true);
-                        String columnName = field.getAnnotation(Column.class).name();
-                        Object value = rs.getObject(columnName);
-                        field.set(entity, value);
+                        String entityColumnName = field.getAnnotation(Column.class).name();
+                        Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
+                        field.set(entity, entityColumnValueInDatabase);
                     }
                     if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
                         JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-                        field.set(entity, joinColumn(field.getType(), table, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+                        field.set(entity, this.joinColumn(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
                     }
                 }
 
@@ -57,17 +54,10 @@ public class MacchiatoRepository<T> {
 
     public T findById(String id) {
         T entity = null;
-        String table = this.ENTITY.getAnnotation(Table.class).name();
-        String idField = null;
-
-        for(Field field : this.ENTITY.getDeclaredFields()) {
-            if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
-                idField = field.getAnnotation(Column.class).name();
-            }
-        }
+        String idField = this.getEntityIdField();
 
         try {
-            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.getById(table, idField, id));
+            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.getById(this.ENTITY_TABLE_NAME, idField, id));
             entity = (T) this.ENTITY.getDeclaredConstructor().newInstance();
 
             for(Field field : this.ENTITY.getDeclaredFields()) {
@@ -79,7 +69,7 @@ public class MacchiatoRepository<T> {
                 }
                 if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
                     JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-                    field.set(entity, joinColumn(field.getType(), table, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+                    field.set(entity, this.joinColumn(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
                 }
             }
 
@@ -170,6 +160,25 @@ public class MacchiatoRepository<T> {
         }
 
         return foundEntity;
+    }
+
+    private List<Field> getEntityFields() {
+        List<Field> fields = new ArrayList<>();
+
+        for(Field field : this.ENTITY_DECLARED_FIELDS) {
+            fields.add(field);
+        }
+
+        return fields;
+    }
+
+    private String getEntityIdField() {
+        for(Field field : this.ENTITY_DECLARED_FIELDS) {
+            if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
+                return field.getAnnotation(Column.class).name();
+            }
+        }
+        return null;
     }
 
     private Class<T> getGenericType() {

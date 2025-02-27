@@ -12,6 +12,7 @@ public class MacchiatoTest {
         RoleRepository roleRepository = new RoleRepository();
         UserRoleRepository userRoleRepository = new UserRoleRepository();
 
+
         User user = User.newInstance(3, "Mark", "Fishbach");
         Role role = Role.newInstance(1, "ADMIN");
         UserRole userRole = UserRole.newInstance(1, 1, 1);
