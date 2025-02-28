@@ -90,22 +90,13 @@ public class MacchiatoRepository<T> {
     }
 
     private Object joinColumn(Class entity, String table, String joinTable, String joinColumn) {
-        List<String> joinFields = new ArrayList<>();
         Object foundEntity = null;
 
-        for(Field field : entity.getDeclaredFields()) {
-            if(field.isAnnotationPresent(Column.class)) {
-                joinFields.add(field.getAnnotation(Column.class).name());
-            }
-        }
-
         try {
-            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, joinFields));
-
+            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
             while(rs.next()) {
                 foundEntity = this.createPopulatedEntityFromClass(entity, rs);
             }
-
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -124,14 +115,16 @@ public class MacchiatoRepository<T> {
         return fields;
     }
 
-    private List<Field> getEntityFieldsFromClass(Class clazz) {
-        List<Field> fields = new ArrayList<>();
+    private List<String> getColumnNamesFromClass(Class clazz) {
+        List<String> columns = new ArrayList<>();
 
         for(Field field : clazz.getDeclaredFields()) {
-            fields.add(field);
+            if(field.isAnnotationPresent(Column.class)) {
+                columns.add(field.getAnnotation(Column.class).name());
+            }
         }
 
-        return fields;
+        return columns;
     }
 
     private String getEntityIdColumn() {
