@@ -7,6 +7,7 @@ public class Macchiato {
     // TODO: JoinTable OneToMany
     // TODO: JoinTable ManyToOne
     // TODO: Update
+    // TODO: Custom database
 
 
     public Macchiato() {

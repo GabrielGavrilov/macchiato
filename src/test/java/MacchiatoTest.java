@@ -18,12 +18,11 @@ public class MacchiatoTest {
         UserRole userRole = UserRole.newInstance(1, 1, 1);
 
         userRepository.deleteById(Integer.toString(2));
+        userRepository.save(user);
 
-        List<User> users = userRepository.getAll();
+        UserRole r = userRoleRepository.findById(Integer.toString(1));
 
-        users.forEach(u -> {
-            System.out.println(u.firstName + " " + u.lastName);
-        });
+        System.out.println(r.user.firstName + " " + r.user.lastName + " has role " + r.role.roleName);
 
     }
 }

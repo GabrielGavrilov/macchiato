@@ -3,12 +3,11 @@ package org.gabrielgavrilov.macchiato;
 import org.gabrielgavrilov.macchiato.annotations.*;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MacchiatoRepository<T> {
@@ -43,7 +42,7 @@ public class MacchiatoRepository<T> {
         T entity = null;
 
         try {
-            String query = QueryBuilder.getById(this.ENTITY_TABLE_NAME, this.getEntityIdField(), id);
+            String query = QueryBuilder.getById(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id);
             ResultSet rs = this.DATA_SOURCE.executeQuery(query);
             entity = this.createPopulatedEntityBasedOnResultSet(rs);
         }
@@ -62,7 +61,7 @@ public class MacchiatoRepository<T> {
             for(Field field : this.getEntityFields()) {
                 if(field.isAnnotationPresent(Column.class)) {
                     columns.add(field.getAnnotation(Column.class).name());
-                    values.add(field.get(entity).toString());
+                    values.add(String.valueOf(field.get(entity)));
                 }
             }
             this.DATA_SOURCE.executeQuery(QueryBuilder.save(this.ENTITY_TABLE_NAME, columns, values));
@@ -73,28 +72,17 @@ public class MacchiatoRepository<T> {
     }
 
     public void deleteById(String id) {
-        String table = this.ENTITY.getAnnotation(Table.class).name();
-        String idField = null;
-
-        for(Field field : this.ENTITY.getDeclaredFields()) {
-            if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
-                idField = field.getAnnotation(Column.class).name();
-            }
-        }
-
         try {
-            this.DATA_SOURCE.executeQuery(QueryBuilder.delete(table, idField, id));
+            this.DATA_SOURCE.executeQuery(QueryBuilder.delete(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id));
         }
         catch(Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void delete(String idColumn, String idValue) {
-        String table = this.ENTITY.getAnnotation(Table.class).name();
-
+    public void delete(Object entity) {
         try {
-            this.DATA_SOURCE.executeQuery(QueryBuilder.delete(table, idColumn, idValue));
+            this.deleteById(getIdValueFromObjectEntity(entity));
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -143,10 +131,20 @@ public class MacchiatoRepository<T> {
         return fields;
     }
 
-    private String getEntityIdField() {
+    private String getEntityIdColumn() {
         for(Field field : this.ENTITY_DECLARED_FIELDS) {
             if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
                 return field.getAnnotation(Column.class).name();
+            }
+        }
+        return null;
+    }
+
+    private String getIdValueFromObjectEntity(Object entity) throws Exception {
+        for(Field field : entity.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
+                field.setAccessible(true);
+                return String.valueOf(field.get(entity));
             }
         }
         return null;
@@ -160,7 +158,7 @@ public class MacchiatoRepository<T> {
         return entity;
     }
 
-    private void populateEntityField(T entity, Field field, ResultSet rs) throws Exception {
+    private void populateEntityField(Object entity, Field field, ResultSet rs) throws Exception {
         if(field.isAnnotationPresent(Column.class)) {
             field.setAccessible(true);
             String entityColumnName = field.getAnnotation(Column.class).name();
