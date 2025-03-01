@@ -7,6 +7,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,17 +55,33 @@ public class MacchiatoRepository<T> {
     }
 
     public void save(Object entity) {
-        List<String> columns = new ArrayList<>();
-        List<String> values = new ArrayList<>();
-
         try {
-            for(Field field : this.getEntityFields()) {
-                if(field.isAnnotationPresent(Column.class)) {
-                    columns.add(field.getAnnotation(Column.class).name());
-                    values.add(String.valueOf(field.get(entity)));
-                }
-            }
-            this.DATA_SOURCE.execute(QueryBuilder.save(this.ENTITY_TABLE_NAME, columns, values));
+            HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
+            this.DATA_SOURCE.execute(
+                    QueryBuilder.save(
+                            this.ENTITY_TABLE_NAME,
+                            new ArrayList<String>(columnsAndValues.keySet()),
+                            new ArrayList<String>(columnsAndValues.values())
+                    )
+            );
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void update(Object entity) {
+        try {
+            HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
+            this.DATA_SOURCE.execute(
+                    QueryBuilder.update(
+                            this.ENTITY_TABLE_NAME,
+                            new ArrayList<String>(columnsAndValues.keySet()),
+                            new ArrayList<String>(columnsAndValues.values()),
+                            this.getEntityIdColumn(),
+                            this.getIdValueFromObjectEntity(entity)
+                    )
+            );
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -124,6 +141,17 @@ public class MacchiatoRepository<T> {
         }
 
         return columns;
+    }
+
+    private HashMap<String, String> getColumnNamesAndValuesFromObject(Object entity) throws Exception {
+        HashMap<String, String> columnsAndValues = new HashMap<>();
+
+        for (Field field : entity.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(Column.class)) {
+                columnsAndValues.put(field.getAnnotation(Column.class).name(), String.valueOf(field.get(entity)));
+            }
+        }
+        return columnsAndValues;
     }
 
     private String getEntityIdColumn() {

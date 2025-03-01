@@ -17,7 +17,6 @@ public class DataSource {
         }
     }
 
-    // TODO: Might not always return a ResultSet
     public ResultSet executeQuery(String statement) {
         try {
             return this.statement.executeQuery(statement);

@@ -1,6 +1,7 @@
 package org.gabrielgavrilov.macchiato;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,15 @@ public class QueryBuilder {
 
     public static String getAll(String tableName) {
         return String.format("SELECT * FROM %s;", tableName);
+    }
+
+    public static String getById(String tableName, String idColumn, String idValue) {
+        return String.format(
+                "SELECT * FROM %s WHERE %s = %s;",
+                tableName,
+                idColumn,
+                idValue
+        );
     }
 
     public static String save(String tableName, List<String> columns, List<String> values) {
@@ -21,9 +31,23 @@ public class QueryBuilder {
         );
     }
 
-    public static String getById(String tableName, String idField, String idValue) {
+    public static String update(String tableName, List<String> columns, List<String> values, String idColumn, String idValue) {
+        List<String> set = new ArrayList<>();
+        for(int i = 0; i < columns.size(); i++) {
+            set.add(String.format("%s = '%s'", columns.get(i), values.get(i)));
+        }
         return String.format(
-                "SELECT * FROM %s WHERE %s = %s;",
+                "UPDATE %s SET %s WHERE %s = %s;",
+                tableName,
+                String.join(", ", set),
+                idColumn,
+                idValue
+        );
+    }
+
+    public static String delete(String tableName, String idField, String idValue) {
+        return String.format(
+                "DELETE FROM %s WHERE %s = %s;",
                 tableName,
                 idField,
                 idValue
@@ -44,15 +68,6 @@ public class QueryBuilder {
                 joinColumn,
                 joinTable,
                 joinColumn
-        );
-    }
-
-    public static String delete(String tableName, String idField, String idValue) {
-        return String.format(
-                "DELETE FROM %s WHERE %s = %s;",
-                tableName,
-                idField,
-                idValue
         );
     }
 
