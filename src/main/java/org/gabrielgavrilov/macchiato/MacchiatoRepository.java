@@ -64,7 +64,7 @@ public class MacchiatoRepository<T> {
                     values.add(String.valueOf(field.get(entity)));
                 }
             }
-            this.DATA_SOURCE.executeQuery(QueryBuilder.save(this.ENTITY_TABLE_NAME, columns, values));
+            this.DATA_SOURCE.execute(QueryBuilder.save(this.ENTITY_TABLE_NAME, columns, values));
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -73,7 +73,7 @@ public class MacchiatoRepository<T> {
 
     public void deleteById(String id) {
         try {
-            this.DATA_SOURCE.executeQuery(QueryBuilder.delete(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id));
+            this.DATA_SOURCE.execute(QueryBuilder.delete(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id));
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -89,14 +89,13 @@ public class MacchiatoRepository<T> {
         }
     }
 
-    private Object joinColumn(Class entity, String table, String joinTable, String joinColumn) {
+    private Object joinOneToOneColumn(Class entity, String table, String joinTable, String joinColumn) {
         Object foundEntity = null;
 
         try {
             ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
-            while(rs.next()) {
-                foundEntity = this.createPopulatedEntityFromClass(entity, rs);
-            }
+            foundEntity = this.createPopulatedEntityFromClass(entity, rs);
+
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -180,7 +179,7 @@ public class MacchiatoRepository<T> {
         }
         if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinColumn(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+            field.set(entity, this.joinOneToOneColumn(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
     }
 

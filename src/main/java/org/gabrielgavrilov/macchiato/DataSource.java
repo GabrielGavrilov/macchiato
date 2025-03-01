@@ -28,6 +28,15 @@ public class DataSource {
         return null;
     }
 
+    public void execute(String statement) {
+        try {
+            this.statement.execute(statement);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public Connection getConnection() {
         return this.connection;
     }
