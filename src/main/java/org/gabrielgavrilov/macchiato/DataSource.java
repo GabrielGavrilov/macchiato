@@ -9,7 +9,7 @@ public class DataSource {
 
     public DataSource() {
         try {
-            this.connection = DriverManager.getConnection("jdbc:sqlite:test.db");
+            this.connection = DriverManager.getConnection(Macchiato.DATABASE);
             this.statement = this.connection.createStatement();
         }
         catch(Exception e) {
