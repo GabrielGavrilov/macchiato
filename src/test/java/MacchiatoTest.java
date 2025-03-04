@@ -8,20 +8,27 @@ import java.util.List;
 public class MacchiatoTest {
     public static void main(String[] args) {
 
+        // SELECT * FROM courses JOIN teachers ON (teachers.teacher_id = courses.teacher_id) WHERE teachers.first_name = "John" ;
+
         Macchiato.DATABASE = "jdbc:sqlite:test.db";
 
-        UserRepository userRepository = new UserRepository();
-        UserClassRepository classRepository = new UserClassRepository();
+        TeacherRepository teacherRepository = new TeacherRepository();
+        CourseRepository courseRepository = new CourseRepository();
 
-//        User savedUser = User.newInstance(3, "Mark", "Fishbach");
-//        userRepository.save(savedUser);
+        List<Teacher> teachers = teacherRepository.getAll();
+        List<Course> courses = courseRepository.getAll();
 
-
-        List<User> users = classRepository.findById(Integer.toString(1)).users;
-
-        users.forEach(u -> {
-            System.out.println(String.format("(%s, %s, %s, %s)", u.userId, u.firstName, u.lastName, u.classId));
+        System.out.println("Teachers");
+        teachers.forEach((teacher) -> {
+            System.out.println(String.format("(%s, %s, %s)", teacher.teacherId, teacher.firstName, teacher.lastName));
         });
+
+        System.out.println("Courses");
+        courses.forEach((course) -> {
+            System.out.println(String.format("(%s, %s, %s)", course.courseId, course.courseName, course.teacherId));
+        });
+
+
 
     }
 }

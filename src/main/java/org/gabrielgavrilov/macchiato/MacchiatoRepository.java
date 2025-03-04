@@ -224,7 +224,7 @@ public class MacchiatoRepository<T> {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
             field.set(entity, this.joingSingular(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
-        if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToMany.class)) {
+        if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
             field.set(entity, this.joinMany(joinColumnAnnotation.referencedClass(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
