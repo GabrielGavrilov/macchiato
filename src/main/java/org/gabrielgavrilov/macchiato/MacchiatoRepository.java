@@ -121,6 +121,23 @@ public class MacchiatoRepository<T> {
         return foundEntity;
     }
 
+    private Object joinOneToManyColumn(Class entity, String table, String joinTable, String joinColumn) {
+        List<Object> foundEntities = new ArrayList<>();
+        System.out.println(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
+
+        try {
+            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
+            while(rs.next()) {
+                foundEntities.add(this.createPopulatedEntityFromClass(entity, rs));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return foundEntities;
+    }
+
     private List<Field> getEntityFields() {
         List<Field> fields = new ArrayList<>();
 
@@ -208,6 +225,10 @@ public class MacchiatoRepository<T> {
         if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
             field.set(entity, this.joinOneToOneColumn(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+        }
+        if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToMany.class)) {
+            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
+            field.set(entity, this.joinOneToManyColumn(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
     }
 

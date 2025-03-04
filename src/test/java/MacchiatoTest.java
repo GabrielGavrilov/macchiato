@@ -11,13 +11,17 @@ public class MacchiatoTest {
         Macchiato.DATABASE = "jdbc:sqlite:test.db";
 
         UserRepository userRepository = new UserRepository();
+        UserClassRepository classRepository = new UserClassRepository();
 
 //        User savedUser = User.newInstance(3, "Mark", "Fishbach");
 //        userRepository.save(savedUser);
 
 
-        User user = userRepository.findById(Integer.toString(3));
-        System.out.println(String.format("(%s, %s, %s)", user.id, user.firstName, user.lastName));
+        List<User> users = classRepository.findById(Integer.toString(1)).users;
+
+        users.forEach(u -> {
+            System.out.println(String.format("(%s, %s, %s, %s)", u.userId, u.firstName, u.lastName, u.classId));
+        });
 
     }
 }

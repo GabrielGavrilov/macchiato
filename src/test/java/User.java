@@ -1,15 +1,14 @@
-import org.gabrielgavrilov.macchiato.annotations.Column;
-import org.gabrielgavrilov.macchiato.annotations.Entity;
-import org.gabrielgavrilov.macchiato.annotations.Id;
-import org.gabrielgavrilov.macchiato.annotations.Table;
+import org.gabrielgavrilov.macchiato.annotations.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
-    @Column(name = "id")
-    public int id;
+    @Column(name = "user_id")
+    public int userId;
 
     @Column(name = "first_name")
     public String firstName;
@@ -17,9 +16,12 @@ public class User {
     @Column(name = "last_name")
     public String lastName;
 
+    @Column(name = "class_id")
+    public int classId;
+
     public static User newInstance(int id, String firstName, String lastName) {
         User user = new User();
-        user.id = id;
+        user.userId = id;
         user.firstName = firstName;
         user.lastName = lastName;
         return user;
