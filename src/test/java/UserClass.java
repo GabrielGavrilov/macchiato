@@ -14,8 +14,8 @@ public class UserClass {
     public String className;
 
     @OneToMany
-    @JoinColumn(table = "users", column = "class_id")
-    List<User> users;
+    @JoinColumn(table = "users", column = "class_id", referencedClass = User.class)
+    public List<User> users;
 
     public static UserClass newInstance(int id, String className) {
         UserClass userClass = new UserClass();

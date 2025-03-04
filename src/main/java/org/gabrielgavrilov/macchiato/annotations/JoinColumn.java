@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface JoinColumn {
     public String table() default "";
     public String column() default "";
+    public Class<?> referencedClass() default Object.class;
 }
