@@ -123,7 +123,10 @@ public class MacchiatoRepository<T> {
 
     private Object joinOneToManyColumn(Class entity, String table, String joinTable, String joinColumn) {
         List<Object> foundEntities = new ArrayList<>();
-        System.out.println(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
+
+        for (String s : this.getColumnNamesFromClass(entity)) {
+            System.out.println(s);
+        }
 
         try {
             ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
@@ -150,8 +153,9 @@ public class MacchiatoRepository<T> {
 
     private List<String> getColumnNamesFromClass(Class clazz) {
         List<String> columns = new ArrayList<>();
-
+        System.out.println(clazz.getDeclaredClasses());
         for(Field field : clazz.getDeclaredFields()) {
+            System.out.println(field.getName());
             if(field.isAnnotationPresent(Column.class)) {
                 columns.add(field.getAnnotation(Column.class).name());
             }
