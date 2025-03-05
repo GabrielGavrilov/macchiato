@@ -106,12 +106,21 @@ public class MacchiatoRepository<T> {
         }
     }
 
-    private Object joingSingular(Class entity, String table, String joinTable, String joinColumn) {
+    private Object joinSingular(Object entity, Class joinClass, String table, String joinTable, String joinColumn) {
         Object foundEntity = null;
 
         try {
-            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
-            foundEntity = this.createPopulatedEntityFromClass(entity, rs);
+            ResultSet rs = this.DATA_SOURCE.executeQuery(
+                    QueryBuilder.joinTable(
+                            table,
+                            this.getEntityIdColumn(),
+                            this.getIdValueFromObjectEntity(entity),
+                            joinTable,
+                            joinColumn,
+                            this.getColumnNamesFromClass(joinClass)
+                    )
+            );
+            foundEntity = this.createPopulatedEntityFromClass(joinClass, rs);
 
         }
         catch(Exception e) {
@@ -121,13 +130,22 @@ public class MacchiatoRepository<T> {
         return foundEntity;
     }
 
-    private List<Object> joinMany(Class entity, String table, String joinTable, String joinColumn) {
+    private List<Object> joinMany(Object entity, Class joinClass, String table, String joinTable, String joinColumn) {
         List<Object> foundEntities = new ArrayList<>();
 
         try {
-            ResultSet rs = this.DATA_SOURCE.executeQuery(QueryBuilder.joinTable(table, joinTable, joinColumn, this.getColumnNamesFromClass(entity)));
+            ResultSet rs = this.DATA_SOURCE.executeQuery(
+                    QueryBuilder.joinTable(
+                            table,
+                            this.getEntityIdColumn(),
+                            this.getIdValueFromObjectEntity(entity),
+                            joinTable,
+                            joinColumn,
+                            this.getColumnNamesFromClass(joinClass)
+                    )
+            );
             while(rs.next()) {
-                foundEntities.add(this.createPopulatedEntityFromClass(entity, rs));
+                foundEntities.add(this.createPopulatedEntityFromClass(joinClass, rs));
             }
         }
         catch (Exception e) {
@@ -222,11 +240,11 @@ public class MacchiatoRepository<T> {
         }
         if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joingSingular(field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+            field.set(entity, this.joinSingular(entity, field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
         if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinMany(joinColumnAnnotation.referencedClass(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+            field.set(entity, this.joinMany(entity, joinColumnAnnotation.referencedClass(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
     }
 

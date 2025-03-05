@@ -18,15 +18,21 @@ public class MacchiatoTest {
         List<Teacher> teachers = teacherRepository.getAll();
         List<Course> courses = courseRepository.getAll();
 
-        System.out.println("Teachers");
-        teachers.forEach((teacher) -> {
-            System.out.println(String.format("(%s, %s, %s)", teacher.teacherId, teacher.firstName, teacher.lastName));
-        });
+        List<Course> johnCourses = teacherRepository.findById(Integer.toString(101)).courses;
 
-        System.out.println("Courses");
-        courses.forEach((course) -> {
-            System.out.println(String.format("(%s, %s, %s)", course.courseId, course.courseName, course.teacherId));
-        });
+        for (Course c : johnCourses) {
+            System.out.println(String.format("(%s, %s)", c.courseId, c.courseName));
+        }
+
+//        System.out.println("Teachers");
+//        teachers.forEach((teacher) -> {
+//            System.out.println(String.format("(%s, %s, %s)", teacher.teacherId, teacher.firstName, teacher.lastName));
+//        });
+//
+//        System.out.println("Courses");
+//        courses.forEach((course) -> {
+//            System.out.println(String.format("(%s, %s, %s)", course.courseId, course.courseName, course.teacherId));
+//        });
 
 
 
