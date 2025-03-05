@@ -3,6 +3,7 @@ package org.gabrielgavrilov.macchiato;
 public class Macchiato {
 
     // TODO: Add comments
+    // TODO: Write proper tests
     // TODO: Error handling
     // TODO: Better database url connection handling (current one is too unsafe.)
 
