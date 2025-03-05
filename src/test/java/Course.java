@@ -16,6 +16,10 @@ public class Course {
     @Column(name = "teacher_id")
     public int teacherId;
 
+    @OneToOne
+    @JoinColumn(table = "teachers", column = "teacher_id", referencedClass = Teacher.class)
+    public Teacher teacher;
+
     public static Course newInstance(int id, String courseName, int teacherId) {
         Course course = new Course();
         course.courseId = id;

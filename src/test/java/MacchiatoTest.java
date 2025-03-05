@@ -15,14 +15,17 @@ public class MacchiatoTest {
         TeacherRepository teacherRepository = new TeacherRepository();
         CourseRepository courseRepository = new CourseRepository();
 
-        List<Teacher> teachers = teacherRepository.getAll();
-        List<Course> courses = courseRepository.getAll();
+//        List<Teacher> teachers = teacherRepository.getAll();
+//        List<Course> courses = courseRepository.getAll();
+//
+//        List<Course> johnCourses = teacherRepository.findById(Integer.toString(101)).courses;
+//
+//        for (Course c : johnCourses) {
+//            System.out.println(String.format("(%s, %s)", c.courseId, c.courseName));
+//        }
 
-        List<Course> johnCourses = teacherRepository.findById(Integer.toString(101)).courses;
-
-        for (Course c : johnCourses) {
-            System.out.println(String.format("(%s, %s)", c.courseId, c.courseName));
-        }
+        Teacher teacher = courseRepository.findById(Integer.toString(201)).teacher;
+        System.out.println(teacher.firstName);
 
 //        System.out.println("Teachers");
 //        teachers.forEach((teacher) -> {
