@@ -6,8 +6,10 @@ public class Macchiato {
      * No entity found?
      * Return saved?
      * Return updated?
-     * What if no entity exists when we update?
      *
+     * What if no entity exists when we update?
+     * What if no entity exists when we're deleting?
+     * What if no entity exists when we're finding by id?
      */
 
     // TODO: Add comments

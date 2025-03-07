@@ -105,7 +105,7 @@ public class MacchiatoRepository<T> {
     }
 
     /**
-     * Updates the given object entity that's already stored in  the database.
+     * Updates the given object entity that's already stored in the database.
      * <p>
      * This method constructs a query to update an existing record in the table associated
      * with the entity class and executes it. In case of any exceptions during the query execution,
@@ -133,6 +133,15 @@ public class MacchiatoRepository<T> {
         }
     }
 
+    /**
+     * Finds a stored entity in the table with the given id and deletes it.
+     * <p>
+     * This method constructs a query to delete an existing entity with the given id
+     * in the table associated with the entity class, and executes it. In case of any exceptions
+     * during the query execution, the exception is caught and the stack trace is printed.
+     * </p>
+     * @param id a String version of the id.
+     */
     public void deleteById(String id) {
         try {
             this.DATA_SOURCE.execute(QueryBuilder.delete(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id));
@@ -142,6 +151,15 @@ public class MacchiatoRepository<T> {
         }
     }
 
+    /**
+     * Finds a stored entity in the table with the given constructed object of the entity and deletes it.
+     * <p>
+     * This method gets the id value from the given constructed object of the entity
+     * and calls the deleteById() method.
+     * </p>
+     * @param entity constructed object of the entity that is to be deleted
+     *               from the table associated with the entity class.
+     */
     public void delete(Object entity) {
         try {
             this.deleteById(getIdValueFromObjectEntity(entity));
