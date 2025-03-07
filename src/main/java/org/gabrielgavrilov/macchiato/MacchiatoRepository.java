@@ -21,6 +21,18 @@ public class MacchiatoRepository<T> {
     public MacchiatoRepository() {
     }
 
+    /**
+     * Retrieves all entities from the database and returns them as a list.
+     * <p>
+     * This method constructs a query to fetch all records from the table associated
+     * with the entity class, executes the query, and populates a list of entities
+     * from the result set. In case of any exceptions during the query execution or
+     * entity population, the exception is caught and its stack trace is printed.
+     * </p>
+     *
+     * @return A list of all entities of type {@code T} retrieved from the database.
+     *         If no entities are found, an empty list will be returned.
+     */
     public List<T> getAll() {
         List<T> entities = new ArrayList<>();
 
@@ -38,6 +50,18 @@ public class MacchiatoRepository<T> {
         return entities;
     }
 
+    /**
+     * Retrieves an entity from the database with the given id and returns it.
+     * <p>
+     * This method constructs a query to fetch a singular record from the table associated
+     * with the entity class, executes the query, and populates a new entity from the result set.
+     * In case of any exceptions during the query execution or entity population, the exception is
+     * caught and its stack trace is printed.
+     * </p>
+     *
+     * @param id a String version of the id.
+     * @return An entity with the type {@code T} retrieved from the database.
+     */
     public T findById(String id) {
         T entity = null;
 
@@ -53,6 +77,17 @@ public class MacchiatoRepository<T> {
         return entity;
     }
 
+    /**
+     * Saves the given object entity into the database.
+     * <p>
+     * This method constructs a query to insert a new record into the table associated
+     * with the entity class and executes it. In case of any exceptions during the query execution,
+     * the exception is caught and its stack trace is printed.
+     * </p>
+     *
+     * @param entity a constructed object of the entity that's to be saved
+     *               in the table associated with the entity class.
+     */
     public void save(Object entity) {
         try {
             HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
@@ -69,6 +104,17 @@ public class MacchiatoRepository<T> {
         }
     }
 
+    /**
+     * Updates the given object entity that's already stored in  the database.
+     * <p>
+     * This method constructs a query to update an existing record in the table associated
+     * with the entity class and executes it. In case of any exceptions during the query execution,
+     * the exception is caught and the stack trace is printed.
+     * </p>
+     *
+     * @param entity a constructed object of the entity that's to be updated
+     *               in the table associated with the entity class.
+     */
     public void update(Object entity) {
         try {
             HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);

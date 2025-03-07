@@ -7,6 +7,9 @@ public class DataSource {
     private Connection connection;
     private Statement statement;
 
+    /**
+     * Initializes the DataSource and connects to the given database.
+     */
     public DataSource() {
         try {
             this.connection = DriverManager.getConnection(Macchiato.DATABASE);
@@ -17,6 +20,11 @@ public class DataSource {
         }
     }
 
+    /**
+     * Executes a SQL query and returns a ResultSet.
+     * @param statement
+     * @return ResultSet
+     */
     public ResultSet executeQuery(String statement) {
         try {
             return this.statement.executeQuery(statement);
@@ -27,6 +35,10 @@ public class DataSource {
         return null;
     }
 
+    /**
+     * Executes a SQL query without returning a ResultSet.
+     * @param statement
+     */
     public void execute(String statement) {
         try {
             this.statement.execute(statement);
@@ -35,13 +47,4 @@ public class DataSource {
             e.printStackTrace();
         }
     }
-
-    public Connection getConnection() {
-        return this.connection;
-    }
-
-    public Statement getStatement() {
-        return this.statement;
-    }
-
 }
