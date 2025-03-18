@@ -61,6 +61,7 @@ public class MacchiatoRepository<T> {
      *
      * @param id a String version of the id.
      * @return An entity with the type {@code T} retrieved from the database.
+     *         If no entity was found, null type {@code T} will be returned.
      */
     public T findById(String id) {
         T entity = null;
@@ -105,7 +106,8 @@ public class MacchiatoRepository<T> {
     }
 
     /**
-     * Updates the given object entity that's already stored in the database.
+     * Updates the given object entity that's already stored in the database. If entity does
+     * not exist in the table, it will call the save() method instead.
      * <p>
      * This method constructs a query to update an existing record in the table associated
      * with the entity class and executes it. In case of any exceptions during the query execution,
@@ -117,16 +119,22 @@ public class MacchiatoRepository<T> {
      */
     public void update(Object entity) {
         try {
-            HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
-            this.DATA_SOURCE.execute(
-                    QueryBuilder.update(
-                            this.ENTITY_TABLE_NAME,
-                            new ArrayList<String>(columnsAndValues.keySet()),
-                            new ArrayList<String>(columnsAndValues.values()),
-                            this.getEntityIdColumn(),
-                            this.getIdValueFromObjectEntity(entity)
-                    )
-            );
+            Object exists = this.findById(this.getIdValueFromObjectEntity(entity));
+            if (exists != null) {
+                this.save(entity);
+            }
+            else {
+                HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
+                this.DATA_SOURCE.execute(
+                        QueryBuilder.update(
+                                this.ENTITY_TABLE_NAME,
+                                new ArrayList<String>(columnsAndValues.keySet()),
+                                new ArrayList<String>(columnsAndValues.values()),
+                                this.getEntityIdColumn(),
+                                this.getIdValueFromObjectEntity(entity)
+                        )
+                );
+            }
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -144,7 +152,10 @@ public class MacchiatoRepository<T> {
      */
     public void deleteById(String id) {
         try {
-            this.DATA_SOURCE.execute(QueryBuilder.delete(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id));
+            Object exists = this.findById(id);
+            if (exists != null) {
+                this.DATA_SOURCE.execute(QueryBuilder.delete(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id));
+            }
         }
         catch(Exception e) {
             e.printStackTrace();
