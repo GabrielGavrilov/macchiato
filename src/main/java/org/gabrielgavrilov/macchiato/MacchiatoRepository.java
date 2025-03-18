@@ -169,6 +169,19 @@ public class MacchiatoRepository<T> {
         }
     }
 
+    /**
+     * Joins a singular relationship.
+     * <p>
+     * This method calls the join table query and returns a single foreign entity
+     * related to the primary entity.
+     * </p>
+     * @param entity primary entity.
+     * @param joinClass foreign entity class.
+     * @param table primary table.
+     * @param joinTable foreign table.
+     * @param joinColumn foreign key.
+     * @return singular foreign entity related to the primary entity.
+     */
     private Object joinSingular(Object entity, Class joinClass, String table, String joinTable, String joinColumn) {
         Object foundEntity = null;
 
@@ -193,6 +206,19 @@ public class MacchiatoRepository<T> {
         return foundEntity;
     }
 
+    /**
+     * Joins multiple entities
+     * <p>
+     * This method calls the join table query and returns a list
+     * of foreign entities related to the primary entity.
+     * </p>
+     * @param entity primary entity
+     * @param joinClass foreign entity class
+     * @param table primary table
+     * @param joinTable foreign table
+     * @param joinColumn foreign key
+     * @return a list of foreign entities related to the primary entity.
+     */
     private List<Object> joinMany(Object entity, Class joinClass, String table, String joinTable, String joinColumn) {
         List<Object> foundEntities = new ArrayList<>();
 
@@ -218,6 +244,10 @@ public class MacchiatoRepository<T> {
         return foundEntities;
     }
 
+    /**
+     * Returns a list of fields that belong to the generic entity of the class.
+     * @return list of fields that belong to the generic entity.
+     */
     private List<Field> getEntityFields() {
         List<Field> fields = new ArrayList<>();
 
@@ -228,6 +258,11 @@ public class MacchiatoRepository<T> {
         return fields;
     }
 
+    /**
+     * Returns a list of column names that belong to a given class.
+     * @param clazz class to retrieve column names from.
+     * @return list of column names that belong to a given class.
+     */
     private List<String> getColumnNamesFromClass(Class clazz) {
         List<String> columns = new ArrayList<>();
         for(Field field : clazz.getDeclaredFields()) {
@@ -239,6 +274,12 @@ public class MacchiatoRepository<T> {
         return columns;
     }
 
+    /**
+     * Maps column names and their values from a given object to a HashMap.
+     * @param entity a constructed object entity to map its column names and their associated values.
+     * @return HashMap of column names and their associated values
+     * @throws Exception
+     */
     private HashMap<String, String> getColumnNamesAndValuesFromObject(Object entity) throws Exception {
         HashMap<String, String> columnsAndValues = new HashMap<>();
 
@@ -250,6 +291,10 @@ public class MacchiatoRepository<T> {
         return columnsAndValues;
     }
 
+    /**
+     * Returns the entity id column that belongs to the generic entity of the class.
+     * @return string id column
+     */
     private String getEntityIdColumn() {
         for(Field field : this.ENTITY_DECLARED_FIELDS) {
             if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
@@ -259,6 +304,12 @@ public class MacchiatoRepository<T> {
         return null;
     }
 
+    /**
+     * Returns the id value from a given object.
+     * @param entity constructed entity object to obtain an id from.
+     * @return string id value
+     * @throws Exception
+     */
     private String getIdValueFromObjectEntity(Object entity) throws Exception {
         for(Field field : entity.getClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
@@ -269,6 +320,12 @@ public class MacchiatoRepository<T> {
         return null;
     }
 
+    /**
+     * Populates and returns a {@code T} entity based on a given result set.
+     * @param rs SQL result set
+     * @return populated entity with the type {@code T}
+     * @throws Exception
+     */
     private T createPopulatedEntity(ResultSet rs) throws Exception {
         T entity = this.ENTITY.getDeclaredConstructor().newInstance();
         for(Field field : this.getEntityFields()) {
@@ -277,6 +334,13 @@ public class MacchiatoRepository<T> {
         return entity;
     }
 
+    /**
+     * Populates and returns an object entity based on a given class.
+     * @param clazz entity class
+     * @param rs SQL result set
+     * @return populated object entity
+     * @throws Exception
+     */
     private Object createPopulatedEntityFromClass(Class clazz, ResultSet rs) throws Exception {
         Object entity = clazz.getDeclaredConstructor().newInstance();
         for(Field field : entity.getClass().getDeclaredFields()) {
@@ -285,6 +349,13 @@ public class MacchiatoRepository<T> {
         return entity;
     }
 
+    /**
+     * Populates a given entity field based on a given result set.
+     * @param entity object entity
+     * @param field field to be populated
+     * @param rs SQL result set
+     * @throws Exception
+     */
     private void populateEntityField(Object entity, Field field, ResultSet rs) throws Exception {
         if(field.isAnnotationPresent(Column.class)) {
             field.setAccessible(true);
@@ -294,6 +365,13 @@ public class MacchiatoRepository<T> {
         }
     }
 
+    /**
+     * Populates a given entity field that supports join relationships, based on a given result set.
+     * @param entity object entity
+     * @param field field to be populated
+     * @param rs SQL result set
+     * @throws Exception
+     */
     private void populateEntityFieldWithJoinColumn(Object entity, Field field, ResultSet rs) throws Exception {
         if(field.isAnnotationPresent(Column.class)) {
             field.setAccessible(true);
@@ -311,6 +389,10 @@ public class MacchiatoRepository<T> {
         }
     }
 
+    /**
+     * Returns the generic type of the class
+     * @return generic type {@code T} of the repository class
+     */
     private Class<T> getGenericType() {
         Class<?> clazz = this.getClass();
         Type type = clazz.getGenericSuperclass();

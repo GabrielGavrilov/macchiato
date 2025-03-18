@@ -12,7 +12,6 @@ public class Macchiato {
      * What if no entity exists when we're finding by id?
      */
 
-    // TODO: Add comments
     // TODO: Write proper tests
     // TODO: Error handling
     // TODO: Better database url connection handling (current one is too unsafe.)

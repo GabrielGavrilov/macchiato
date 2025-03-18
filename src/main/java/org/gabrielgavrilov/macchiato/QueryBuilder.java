@@ -7,10 +7,22 @@ import java.util.stream.Collectors;
 
 public class QueryBuilder {
 
+    /**
+     * Builds a get all query.
+     * @param tableName table
+     * @return SQL query
+     */
     public static String getAll(String tableName) {
         return String.format("SELECT * FROM %s;", tableName);
     }
 
+    /**
+     * builds a get by id query.
+     * @param tableName table
+     * @param idColumn id column
+     * @param idValue id value
+     * @return SQL query
+     */
     public static String getById(String tableName, String idColumn, String idValue) {
         return String.format(
                 "SELECT * FROM %s WHERE %s = %s;",
@@ -20,6 +32,13 @@ public class QueryBuilder {
         );
     }
 
+    /**
+     * Builds a save query.
+     * @param tableName table
+     * @param columns list of table columns
+     * @param values list of column values
+     * @return SQL query
+     */
     public static String save(String tableName, List<String> columns, List<String> values) {
         return String.format(
                 "INSERT INTO %s (%s) VALUES (%s);",
@@ -31,6 +50,15 @@ public class QueryBuilder {
         );
     }
 
+    /**
+     * Builds an update query.
+     * @param tableName table
+     * @param columns list of table columns
+     * @param values list of column values
+     * @param idColumn id column
+     * @param idValue id value
+     * @return SQL query
+     */
     public static String update(String tableName, List<String> columns, List<String> values, String idColumn, String idValue) {
         List<String> set = new ArrayList<>();
         for(int i = 0; i < columns.size(); i++) {
@@ -45,15 +73,32 @@ public class QueryBuilder {
         );
     }
 
-    public static String delete(String tableName, String idField, String idValue) {
+    /**
+     * Builds a delete query.
+     * @param tableName table
+     * @param idColumn
+     * @param idValue
+     * @return SQL query
+     */
+    public static String delete(String tableName, String idColumn, String idValue) {
         return String.format(
                 "DELETE FROM %s WHERE %s = %s;",
                 tableName,
-                idField,
+                idColumn,
                 idValue
         );
     }
 
+    /**
+     * Builds a join table query.
+     * @param tableName primary table
+     * @param idColumn primary id column
+     * @param idValue primary id value
+     * @param joinTable foreign table
+     * @param joinColumn foreign join column
+     * @param joinFields list of foreign join fields.
+     * @return SQL query
+     */
     public static String joinTable(String tableName, String idColumn, String idValue, String joinTable, String joinColumn, List<String> joinFields) {
         List<String> transformedFields = joinFields
                 .stream()
