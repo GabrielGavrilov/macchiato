@@ -40,7 +40,6 @@ public class MacchiatoRepository<T> {
             String query = QueryBuilder.getAll(this.ENTITY_TABLE_NAME);
             ResultSet rs = this.DATA_SOURCE.executeQuery(query);
             while(rs.next()) {
-                System.out.println("test");
                 entities.add(createPopulatedEntity(rs));
             }
         }
