@@ -104,7 +104,7 @@ public class QueryBuilder {
                 .stream()
                 .map(field -> String.format("%s.%s",joinTable,field))
                 .collect(Collectors.toList());
-        String s = String.format(
+        return String.format(
                 "SELECT %s\nFROM %s\nJOIN %s\nON (%s.%s = %s.%s) WHERE %s.%s = %s;",
                 String.join(", ", transformedFields),
                 tableName,
@@ -117,8 +117,6 @@ public class QueryBuilder {
                 idColumn,
                 idValue
         );
-        System.out.println(s);
-        return s;
     }
 
 }

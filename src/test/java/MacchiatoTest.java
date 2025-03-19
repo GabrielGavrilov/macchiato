@@ -8,15 +8,6 @@ import java.util.List;
 public class MacchiatoTest {
     public static void main(String[] args) {
 
-        Macchiato.DATABASE = "jdbc:sqlite:test.db";
-
-        TeacherRepository teacherRepository = new TeacherRepository();
-        CourseRepository courseRepository = new CourseRepository();
-
-
-        Teacher teacher = courseRepository.findById(Integer.toString(201)).teacher;
-        System.out.println(teacher.firstName);
-
 
     }
 }
