@@ -1,31 +1,28 @@
 import core.Teacher;
 import core.TeacherRepository;
-import org.gabrielgavrilov.macchiato.DataSource;
 import org.gabrielgavrilov.macchiato.Macchiato;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import testutil.datafactory.TeacherTestDataFactory;
 
 import java.sql.*;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 public class MacchiatoTest {
 
     private TeacherRepository teacherRepository;
 
+    private final Teacher john = Teacher.newInstance(1, "John", "Doe");
+    private final Teacher jane = Teacher.newInstance(2, "Jane", "Doe");
+
     @BeforeEach
     public void before() {
         Macchiato.DATABASE = "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1";
         teacherRepository = new TeacherRepository();
+        execute("DROP TABLE IF EXISTS teachers;");
         execute("""
-            CREATE TABLE IF NOT EXISTS teachers (
+            CREATE TABLE teachers (
                 teacher_id INT PRIMARY KEY,
                 first_name VARCHAR(255),
                 last_name VARCHAR(255)
@@ -34,15 +31,46 @@ public class MacchiatoTest {
     }
 
     @Test
-    public void testMacchiatoRepository_save() {
-        Teacher entity = TeacherTestDataFactory.createValidTeacher();
-        teacherRepository.save(entity);
-        Teacher teacher = teacherRepository.getAll().get(0);
+    public void testMacchiatoRepository_save_shouldReturnSavedEntity() {
+        Teacher teacher = teacherRepository.save(john);
         assertNotNull(teacher);
         assertAll(
-                () -> assertEquals(entity.teacherId, teacher.teacherId),
-                () -> assertEquals(entity.firstName, teacher.firstName),
-                () -> assertEquals(entity.lastName, teacher.lastName)
+                () -> assertEquals(john.teacherId, teacher.teacherId),
+                () -> assertEquals(john.firstName, teacher.firstName),
+                () -> assertEquals(john.lastName, teacher.lastName)
+        );
+    }
+
+    @Test
+    public void testMacchiatoRepository_getAll_shouldReturnAListOfAllEntities() {
+        teacherRepository.save(john);
+        teacherRepository.save(jane);
+
+        List<Teacher> teachers = teacherRepository.getAll();
+
+        assertEquals(2, teachers.size());
+        assertAll(
+                () -> assertEquals(jane.teacherId, teachers.get(1).teacherId),
+                () -> assertEquals(jane.firstName, teachers.get(1).firstName),
+                () -> assertEquals(jane.lastName, teachers.get(1).lastName)
+        );
+    }
+
+    @Test
+    public void testMacchiatoRepository_getAll_withNoEntities_shouldReturnAnEmptyList() {
+        List<Teacher> teachers = teacherRepository.getAll();
+        assertEquals(0, teachers.size());
+    }
+
+    @Test
+    public void testMacchiatoRepository_findById_shouldReturnEntity() {
+        teacherRepository.save(john);
+        Teacher entity = teacherRepository.findById(String.valueOf(john.teacherId));
+        assertNotNull(entity);
+        assertAll(
+                () -> assertEquals(john.teacherId, entity.teacherId),
+                () -> assertEquals(john.firstName, entity.firstName),
+                () -> assertEquals(john.lastName, entity.lastName)
         );
     }
 

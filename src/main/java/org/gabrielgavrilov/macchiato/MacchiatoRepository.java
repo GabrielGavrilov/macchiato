@@ -70,7 +70,10 @@ public class MacchiatoRepository<T> {
         try {
             String query = QueryBuilder.getById(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id);
             ResultSet rs = this.DATA_SOURCE.executeQuery(query);
-            entity = this.createPopulatedEntity(rs);
+            if (rs != null) {
+                rs.next();
+                entity = this.createPopulatedEntity(rs);
+            }
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -90,7 +93,8 @@ public class MacchiatoRepository<T> {
      * @param entity a constructed object of the entity that's to be saved
      *               in the table associated with the entity class.
      */
-    public void save(Object entity) {
+    public T save(Object entity) {
+        T savedEntity = null;
         try {
             HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
             this.DATA_SOURCE.execute(
@@ -100,10 +104,12 @@ public class MacchiatoRepository<T> {
                             new ArrayList<String>(columnsAndValues.values())
                     )
             );
+            savedEntity = findById(columnsAndValues.get(getEntityIdColumn()));
         }
         catch(Exception e) {
             e.printStackTrace();
         }
+        return savedEntity;
     }
 
     /**
