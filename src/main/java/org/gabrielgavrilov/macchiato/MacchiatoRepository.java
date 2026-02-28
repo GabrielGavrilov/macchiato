@@ -124,11 +124,12 @@ public class MacchiatoRepository<T> {
      * @param entity a constructed object of the entity that's to be updated
      *               in the table associated with the entity class.
      */
-    public void update(Object entity) {
+    public T update(Object entity) {
+        T updatedEntity = null;
         try {
             Object exists = this.findById(this.getIdValueFromObjectEntity(entity));
             if (exists != null) {
-                this.save(entity);
+                updatedEntity = this.save(entity);
             }
             else {
                 HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
@@ -141,11 +142,13 @@ public class MacchiatoRepository<T> {
                                 this.getIdValueFromObjectEntity(entity)
                         )
                 );
+                updatedEntity = findById(columnsAndValues.get(getEntityIdColumn()));
             }
         }
         catch(Exception e) {
             e.printStackTrace();
         }
+        return updatedEntity;
     }
 
     /**

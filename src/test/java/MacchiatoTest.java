@@ -74,6 +74,35 @@ public class MacchiatoTest {
         );
     }
 
+    @Test
+    public void testMacchiatoRepository_findById_withNoEntity_shouldReturnNullEntity() {
+        Teacher entity = teacherRepository.findById(String.valueOf(1));
+        assertNull(entity);
+    }
+
+    @Test
+    public void testMacchiatoRepository_update_shouldReturnUpdatedEntity() {
+        teacherRepository.save(john);
+        Teacher mark = Teacher.newInstance(1, "Mark", "Brown");
+        Teacher entity = teacherRepository.update(mark);
+        assertNotNull(entity);
+        assertAll(
+                () -> assertEquals(john.teacherId, entity.teacherId),
+                () -> assertEquals(mark.firstName, entity.firstName),
+                () -> assertEquals(mark.lastName, entity.lastName)
+        );
+    }
+
+    @Test
+    public void testMacchiatoRepository_delete_shouldDeleteEntity() {
+        teacherRepository.save(john);
+        Teacher savedEntity = teacherRepository.findById(String.valueOf(john.teacherId));
+        assertNotNull(savedEntity);
+        teacherRepository.delete(john);
+        savedEntity = teacherRepository.findById(String.valueOf(john.teacherId));
+        assertNull(savedEntity);
+    }
+
     private void execute(String query) {
         try {
             Connection conn = DriverManager.getConnection(Macchiato.DATABASE);
