@@ -5,7 +5,6 @@ import java.sql.*;
 public class DataSource {
 
     private Connection connection;
-    private Statement statement;
 
     /**
      * Initializes the DataSource and connects to the given database.
@@ -13,7 +12,6 @@ public class DataSource {
     public DataSource() {
         try {
             this.connection = DriverManager.getConnection(Macchiato.DATABASE);
-            this.statement = this.connection.createStatement();
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -22,12 +20,13 @@ public class DataSource {
 
     /**
      * Executes a SQL query and returns a ResultSet.
-     * @param statement
+     * @param query
      * @return ResultSet
      */
-    public ResultSet executeQuery(String statement) {
+    public ResultSet executeQuery(String query) {
         try {
-            return this.statement.executeQuery(statement);
+            Statement stmt = this.connection.createStatement();
+            return stmt.executeQuery(query);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -37,11 +36,12 @@ public class DataSource {
 
     /**
      * Executes a SQL query without returning a ResultSet.
-     * @param statement
+     * @param query
      */
-    public void execute(String statement) {
+    public void execute(String query) {
         try {
-            this.statement.execute(statement);
+            Statement stmt = this.connection.createStatement();
+            stmt.execute(query);
         }
         catch(Exception e) {
             e.printStackTrace();

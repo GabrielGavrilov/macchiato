@@ -16,9 +16,10 @@ public class MacchiatoRepository<T> {
     private final String ENTITY_TABLE_NAME = this.ENTITY.getAnnotation(Table.class).name();
     private final Field[] ENTITY_DECLARED_FIELDS = this.ENTITY.getDeclaredFields();
 
-    private final DataSource DATA_SOURCE = new DataSource();
+    private DataSource DATA_SOURCE;
 
     public MacchiatoRepository() {
+        this.DATA_SOURCE = new DataSource();
     }
 
     /**

@@ -1,6 +1,6 @@
-import org.gabrielgavrilov.macchiato.annotations.*;
+package core;
 
-import java.util.List;
+import org.gabrielgavrilov.macchiato.annotations.*;
 
 @Entity
 @Table(name = "courses")

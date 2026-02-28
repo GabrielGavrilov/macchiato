@@ -1,6 +1,6 @@
-import org.gabrielgavrilov.macchiato.annotations.*;
+package core;
 
-import java.util.List;
+import org.gabrielgavrilov.macchiato.annotations.*;
 
 @Entity
 @Table(name = "teachers")
@@ -17,8 +17,8 @@ public class Teacher {
     public String lastName;
 
 //    @OneToMany
-//    @JoinColumn(table = "courses", column = "teacher_id", referencedClass = Course.class)
-//    public List<Course> courses;
+//    @JoinColumn(table = "courses", column = "teacher_id", referencedClass = core.Course.class)
+//    public List<core.Course> courses;
 
     public static Teacher newInstance(int id, String firstName, String lastName) {
         Teacher teacher = new Teacher();
