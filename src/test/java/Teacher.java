@@ -16,9 +16,9 @@ public class Teacher {
     @Column(name = "last_name")
     public String lastName;
 
-    @OneToMany
-    @JoinColumn(table = "courses", column = "teacher_id", referencedClass = Course.class)
-    public List<Course> courses;
+//    @OneToMany
+//    @JoinColumn(table = "courses", column = "teacher_id", referencedClass = Course.class)
+//    public List<Course> courses;
 
     public static Teacher newInstance(int id, String firstName, String lastName) {
         Teacher teacher = new Teacher();
