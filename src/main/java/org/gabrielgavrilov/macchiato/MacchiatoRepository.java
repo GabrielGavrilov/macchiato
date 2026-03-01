@@ -217,7 +217,11 @@ public class MacchiatoRepository<T> {
                             this.getColumnNamesFromClass(joinClass)
                     )
             );
-            foundEntity = this.createPopulatedEntityFromClass(joinClass, rs);
+
+            if (rs != null) {
+                rs.next();
+                foundEntity = this.createPopulatedEntityFromClass(joinClass, rs);
+            }
 
         }
         catch(Exception e) {
