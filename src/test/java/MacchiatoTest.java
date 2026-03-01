@@ -83,6 +83,8 @@ public class MacchiatoTest {
     @Test
     public void testMacchiatoRepository_update_shouldReturnUpdatedEntity() {
         teacherRepository.save(john);
+        Teacher oldEntity = teacherRepository.findById(String.valueOf(john.teacherId));
+        assertNotNull(oldEntity);
         Teacher mark = Teacher.newInstance(1, "Mark", "Brown");
         Teacher entity = teacherRepository.update(mark);
         assertNotNull(entity);
@@ -91,6 +93,11 @@ public class MacchiatoTest {
                 () -> assertEquals(mark.firstName, entity.firstName),
                 () -> assertEquals(mark.lastName, entity.lastName)
         );
+    }
+
+    @Test
+    public void testMacchiatoRepository_update_withNoEntity_shouldThrowRuntimeException() {
+        assertThrows(RuntimeException.class, () -> teacherRepository.update(john));
     }
 
     @Test

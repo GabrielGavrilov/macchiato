@@ -104,7 +104,7 @@ public class MacchiatoRepository<T> {
                             new ArrayList<String>(columnsAndValues.values())
                     )
             );
-            savedEntity = findById(columnsAndValues.get(getEntityIdColumn()));
+            savedEntity = this.findById(this.getIdValueFromObjectEntity(entity));
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -128,8 +128,8 @@ public class MacchiatoRepository<T> {
         T updatedEntity = null;
         try {
             Object exists = this.findById(this.getIdValueFromObjectEntity(entity));
-            if (exists != null) {
-                updatedEntity = this.save(entity);
+            if (exists == null) {
+                throw new RuntimeException();
             }
             else {
                 HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
@@ -142,11 +142,11 @@ public class MacchiatoRepository<T> {
                                 this.getIdValueFromObjectEntity(entity)
                         )
                 );
-                updatedEntity = findById(columnsAndValues.get(getEntityIdColumn()));
+                updatedEntity = this.findById(this.getIdValueFromObjectEntity(entity));
             }
         }
         catch(Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException();
         }
         return updatedEntity;
     }
