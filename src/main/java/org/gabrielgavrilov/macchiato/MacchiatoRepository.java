@@ -68,7 +68,7 @@ public class MacchiatoRepository<T> {
         T entity = null;
 
         try {
-            String query = QueryBuilder.getById(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id);
+            String query = QueryBuilder.getById(this.ENTITY_TABLE_NAME, MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY), id);
             ResultSet rs = this.DATA_SOURCE.executeQuery(query);
             if (rs != null) {
                 rs.next();
@@ -96,7 +96,7 @@ public class MacchiatoRepository<T> {
     public T save(Object entity) {
         T savedEntity = null;
         try {
-            HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
+            HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.getColumnNamesAndValuesFromObject(entity);
             this.DATA_SOURCE.execute(
                     QueryBuilder.save(
                             this.ENTITY_TABLE_NAME,
@@ -104,7 +104,7 @@ public class MacchiatoRepository<T> {
                             new ArrayList<String>(columnsAndValues.values())
                     )
             );
-            savedEntity = this.findById(this.getIdValueFromObjectEntity(entity));
+            savedEntity = this.findById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -127,22 +127,23 @@ public class MacchiatoRepository<T> {
     public T update(Object entity) {
         T updatedEntity = null;
         try {
-            Object exists = this.findById(this.getIdValueFromObjectEntity(entity));
+            Object exists = this.findById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
             if (exists == null) {
+                // TODO: throw something else
                 throw new RuntimeException();
             }
             else {
-                HashMap<String, String> columnsAndValues = this.getColumnNamesAndValuesFromObject(entity);
+                HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.getColumnNamesAndValuesFromObject(entity);
                 this.DATA_SOURCE.execute(
                         QueryBuilder.update(
                                 this.ENTITY_TABLE_NAME,
                                 new ArrayList<String>(columnsAndValues.keySet()),
                                 new ArrayList<String>(columnsAndValues.values()),
-                                this.getEntityIdColumn(),
-                                this.getIdValueFromObjectEntity(entity)
+                                MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY),
+                                MacchiatoReflectionTools.getIdValueFromObjectEntity(entity)
                         )
                 );
-                updatedEntity = this.findById(this.getIdValueFromObjectEntity(entity));
+                updatedEntity = this.findById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
             }
         }
         catch(Exception e) {
@@ -164,7 +165,7 @@ public class MacchiatoRepository<T> {
         try {
             Object exists = this.findById(id);
             if (exists != null) {
-                this.DATA_SOURCE.execute(QueryBuilder.delete(this.ENTITY_TABLE_NAME, this.getEntityIdColumn(), id));
+                this.DATA_SOURCE.execute(QueryBuilder.delete(this.ENTITY_TABLE_NAME, MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY), id));
             }
         }
         catch(Exception e) {
@@ -183,7 +184,7 @@ public class MacchiatoRepository<T> {
      */
     public void delete(Object entity) {
         try {
-            this.deleteById(getIdValueFromObjectEntity(entity));
+            this.deleteById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -210,11 +211,11 @@ public class MacchiatoRepository<T> {
             ResultSet rs = this.DATA_SOURCE.executeQuery(
                     QueryBuilder.joinTable(
                             table,
-                            this.getEntityIdColumn(),
-                            this.getIdValueFromObjectEntity(entity),
+                            MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY),
+                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
                             joinTable,
                             joinColumn,
-                            this.getColumnNamesFromClass(joinClass)
+                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
                     )
             );
 
@@ -251,11 +252,11 @@ public class MacchiatoRepository<T> {
             ResultSet rs = this.DATA_SOURCE.executeQuery(
                     QueryBuilder.joinTable(
                             table,
-                            this.getEntityIdColumn(),
-                            this.getIdValueFromObjectEntity(entity),
+                            MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY),
+                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
                             joinTable,
                             joinColumn,
-                            this.getColumnNamesFromClass(joinClass)
+                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
                     )
             );
             while(rs.next()) {
@@ -270,82 +271,6 @@ public class MacchiatoRepository<T> {
     }
 
     /**
-     * Returns a list of fields that belong to the generic entity of the class.
-     * @return list of fields that belong to the generic entity.
-     */
-    private List<Field> getEntityFields() {
-        List<Field> fields = new ArrayList<>();
-
-        for(Field field : this.ENTITY_DECLARED_FIELDS) {
-            fields.add(field);
-        }
-
-        return fields;
-    }
-
-    /**
-     * Returns a list of column names that belong to a given class.
-     * @param clazz class to retrieve column names from.
-     * @return list of column names that belong to a given class.
-     */
-    private List<String> getColumnNamesFromClass(Class clazz) {
-        List<String> columns = new ArrayList<>();
-        for(Field field : clazz.getDeclaredFields()) {
-            if(field.isAnnotationPresent(Column.class)) {
-                columns.add(field.getAnnotation(Column.class).name());
-            }
-        }
-
-        return columns;
-    }
-
-    /**
-     * Maps column names and their values from a given object to a HashMap.
-     * @param entity a constructed object entity to map its column names and their associated values.
-     * @return HashMap of column names and their associated values
-     * @throws Exception
-     */
-    private HashMap<String, String> getColumnNamesAndValuesFromObject(Object entity) throws Exception {
-        HashMap<String, String> columnsAndValues = new HashMap<>();
-
-        for (Field field : entity.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(Column.class)) {
-                columnsAndValues.put(field.getAnnotation(Column.class).name(), String.valueOf(field.get(entity)));
-            }
-        }
-        return columnsAndValues;
-    }
-
-    /**
-     * Returns the entity id column that belongs to the generic entity of the class.
-     * @return string id column
-     */
-    private String getEntityIdColumn() {
-        for(Field field : this.ENTITY_DECLARED_FIELDS) {
-            if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
-                return field.getAnnotation(Column.class).name();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the id value from a given object.
-     * @param entity constructed entity object to obtain an id from.
-     * @return string id value
-     * @throws Exception
-     */
-    private String getIdValueFromObjectEntity(Object entity) throws Exception {
-        for(Field field : entity.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
-                field.setAccessible(true);
-                return String.valueOf(field.get(entity));
-            }
-        }
-        return null;
-    }
-
-    /**
      * Populates and returns a {@code T} entity based on a given result set.
      * @param rs SQL result set
      * @return populated entity with the type {@code T}
@@ -353,7 +278,7 @@ public class MacchiatoRepository<T> {
      */
     private T createPopulatedEntity(ResultSet rs) throws Exception {
         T entity = this.ENTITY.getDeclaredConstructor().newInstance();
-        for(Field field : this.getEntityFields()) {
+        for(Field field : MacchiatoReflectionTools.getEntityFields(this.ENTITY)) {
             this.populateEntityFieldWithJoinColumn(entity, field, rs);
         }
         return entity;
