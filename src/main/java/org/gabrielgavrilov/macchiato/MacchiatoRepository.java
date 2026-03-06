@@ -12,14 +12,11 @@ import java.util.List;
 
 public class MacchiatoRepository<T> {
 
-    private final Class<T> ENTITY = this.getGenericType();
-    private final String ENTITY_TABLE_NAME = this.ENTITY.getAnnotation(Table.class).name();
-    private final Field[] ENTITY_DECLARED_FIELDS = this.ENTITY.getDeclaredFields();
-
-    private DataSource DATA_SOURCE;
+    private final Class<T> entityClass = (Class<T>) MacchiatoReflectionTools.getGenericClassType(this.getClass());
+    private final String entityTableName = entityClass.getAnnotation(Table.class).name();
+    private final DataSource dataSource = new DataSource();
 
     public MacchiatoRepository() {
-        this.DATA_SOURCE = new DataSource();
     }
 
     /**
@@ -38,8 +35,8 @@ public class MacchiatoRepository<T> {
         List<T> entities = new ArrayList<>();
 
         try {
-            String query = QueryBuilder.getAll(this.ENTITY_TABLE_NAME);
-            ResultSet rs = this.DATA_SOURCE.executeQuery(query);
+            String query = QueryBuilder.getAll(entityTableName);
+            ResultSet rs = dataSource.executeQuery(query);
             while(rs.next()) {
                 entities.add(createPopulatedEntity(rs));
             }
@@ -68,8 +65,8 @@ public class MacchiatoRepository<T> {
         T entity = null;
 
         try {
-            String query = QueryBuilder.getById(this.ENTITY_TABLE_NAME, MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY), id);
-            ResultSet rs = this.DATA_SOURCE.executeQuery(query);
+            String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getEntityIdColumn(entityClass), id);
+            ResultSet rs = dataSource.executeQuery(query);
             if (rs != null) {
                 rs.next();
                 entity = this.createPopulatedEntity(rs);
@@ -337,16 +334,5 @@ public class MacchiatoRepository<T> {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
             field.set(entity, this.joinMany(entity, joinColumnAnnotation.referencedClass(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
-    }
-
-    /**
-     * Returns the generic type of the class
-     * @return generic type {@code T} of the repository class
-     */
-    private Class<T> getGenericType() {
-        Class<?> clazz = this.getClass();
-        Type type = clazz.getGenericSuperclass();
-        ParameterizedType pt = (ParameterizedType) type;
-        return (Class<T>)pt.getActualTypeArguments()[0];
     }
 }

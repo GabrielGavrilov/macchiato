@@ -4,6 +4,8 @@ import org.gabrielgavrilov.macchiato.annotations.Column;
 import org.gabrielgavrilov.macchiato.annotations.Id;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,16 @@ public class MacchiatoReflectionTools {
      */
     public static List<Field> getEntityFields(Class<?> clazz) {
         return List.of(clazz.getDeclaredFields());
+    }
+
+    /**
+     * Returns the generic type of the class
+     * @return generic type {@code T} of the repository class
+     */
+    public static Class<?> getGenericClassType(Class<?> clazz) {
+        Type type = clazz.getGenericSuperclass();
+        ParameterizedType pt = (ParameterizedType) type;
+        return (Class<?>)pt.getActualTypeArguments()[0];
     }
 
     /**
