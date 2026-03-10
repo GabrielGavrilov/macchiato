@@ -25,7 +25,7 @@ public class MacchiatoTest {
 
     @BeforeEach
     public void before() {
-        Macchiato.DATABASE = "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1";
+        Macchiato.initialize( "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
 
         userRepository = new UserRepository();
         todoRepository = new TodoRepository();
@@ -217,17 +217,7 @@ public class MacchiatoTest {
     }
 
     private void execute(String query) {
-        try {
-            Connection conn = DriverManager.getConnection(Macchiato.DATABASE);
-
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(query);
-
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Macchiato.getDataSource().execute(query);
     }
 
 

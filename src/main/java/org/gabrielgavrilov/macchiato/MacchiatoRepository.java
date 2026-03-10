@@ -3,8 +3,6 @@ package org.gabrielgavrilov.macchiato;
 import org.gabrielgavrilov.macchiato.annotations.*;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,9 +12,10 @@ public class MacchiatoRepository<T> {
 
     private final Class<T> entityClass = (Class<T>) MacchiatoReflectionTools.getGenericClassType(this.getClass());
     private final String entityTableName = entityClass.getAnnotation(Table.class).name();
-    private final DataSource dataSource = new DataSource();
+    private final DataSource dataSource;
 
     public MacchiatoRepository() {
+        this.dataSource = Macchiato.getDataSource();
     }
 
     /**
@@ -94,9 +93,9 @@ public class MacchiatoRepository<T> {
         T savedEntity = null;
         try {
             HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.getColumnNamesAndValuesFromObject(entity);
-            this.DATA_SOURCE.execute(
+            this.dataSource.execute(
                     QueryBuilder.save(
-                            this.ENTITY_TABLE_NAME,
+                            this.entityTableName,
                             new ArrayList<String>(columnsAndValues.keySet()),
                             new ArrayList<String>(columnsAndValues.values())
                     )
@@ -131,12 +130,12 @@ public class MacchiatoRepository<T> {
             }
             else {
                 HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.getColumnNamesAndValuesFromObject(entity);
-                this.DATA_SOURCE.execute(
+                this.dataSource.execute(
                         QueryBuilder.update(
-                                this.ENTITY_TABLE_NAME,
+                                this.entityTableName,
                                 new ArrayList<String>(columnsAndValues.keySet()),
                                 new ArrayList<String>(columnsAndValues.values()),
-                                MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY),
+                                MacchiatoReflectionTools.getEntityIdColumn(this.entityClass),
                                 MacchiatoReflectionTools.getIdValueFromObjectEntity(entity)
                         )
                 );
@@ -162,7 +161,7 @@ public class MacchiatoRepository<T> {
         try {
             Object exists = this.findById(id);
             if (exists != null) {
-                this.DATA_SOURCE.execute(QueryBuilder.delete(this.ENTITY_TABLE_NAME, MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY), id));
+                this.dataSource.execute(QueryBuilder.delete(this.entityTableName, MacchiatoReflectionTools.getEntityIdColumn(this.entityClass), id));
             }
         }
         catch(Exception e) {
@@ -205,10 +204,10 @@ public class MacchiatoRepository<T> {
         Object foundEntity = null;
 
         try {
-            ResultSet rs = this.DATA_SOURCE.executeQuery(
+            ResultSet rs = this.dataSource.executeQuery(
                     QueryBuilder.joinTable(
                             table,
-                            MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY),
+                            MacchiatoReflectionTools.getEntityIdColumn(this.entityClass),
                             MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
                             joinTable,
                             joinColumn,
@@ -246,10 +245,10 @@ public class MacchiatoRepository<T> {
         List<Object> foundEntities = new ArrayList<>();
 
         try {
-            ResultSet rs = this.DATA_SOURCE.executeQuery(
+            ResultSet rs = this.dataSource.executeQuery(
                     QueryBuilder.joinTable(
                             table,
-                            MacchiatoReflectionTools.getEntityIdColumn(this.ENTITY),
+                            MacchiatoReflectionTools.getEntityIdColumn(this.entityClass),
                             MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
                             joinTable,
                             joinColumn,
@@ -274,8 +273,8 @@ public class MacchiatoRepository<T> {
      * @throws Exception
      */
     private T createPopulatedEntity(ResultSet rs) throws Exception {
-        T entity = this.ENTITY.getDeclaredConstructor().newInstance();
-        for(Field field : MacchiatoReflectionTools.getEntityFields(this.ENTITY)) {
+        T entity = this.entityClass.getDeclaredConstructor().newInstance();
+        for(Field field : MacchiatoReflectionTools.getEntityFields(this.entityClass)) {
             this.populateEntityFieldWithJoinColumn(entity, field, rs);
         }
         return entity;
@@ -328,11 +327,11 @@ public class MacchiatoRepository<T> {
         }
         if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinSingular(entity, field.getType(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+            field.set(entity, this.joinSingular(entity, field.getType(), this.entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
         if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
             JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinMany(entity, joinColumnAnnotation.referencedClass(), this.ENTITY_TABLE_NAME, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+            field.set(entity, this.joinMany(entity, joinColumnAnnotation.referencedClass(), this.entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
     }
 }

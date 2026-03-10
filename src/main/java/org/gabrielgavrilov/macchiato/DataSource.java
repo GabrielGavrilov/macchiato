@@ -4,17 +4,21 @@ import java.sql.*;
 
 public class DataSource {
 
-    private Connection connection;
+    private final String databaseUrl;
 
     /**
      * Initializes the DataSource and connects to the given database.
      */
-    public DataSource() {
+    public DataSource(String databaseUrl) {
+        this.databaseUrl = databaseUrl;
+    }
+
+    public Connection getConnection() {
         try {
-            this.connection = DriverManager.getConnection(Macchiato.DATABASE);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
+            return DriverManager.getConnection(this.databaseUrl);
+        } catch (SQLException e) {
+            // Todo: fix this
+            throw new RuntimeException(e);
         }
     }
 
@@ -25,7 +29,7 @@ public class DataSource {
      */
     public ResultSet executeQuery(String query) {
         try {
-            Statement stmt = this.connection.createStatement();
+            Statement stmt = this.getConnection().createStatement();
             return stmt.executeQuery(query);
         }
         catch(Exception e) {
@@ -40,7 +44,7 @@ public class DataSource {
      */
     public void execute(String query) {
         try {
-            Statement stmt = this.connection.createStatement();
+            Statement stmt = this.getConnection().createStatement();
             stmt.execute(query);
         }
         catch(Exception e) {
