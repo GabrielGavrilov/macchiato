@@ -4,6 +4,8 @@ import org.gabrielgavrilov.macchiato.annotations.*;
 
 import java.lang.reflect.Field;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DataSource {
 
@@ -41,14 +43,14 @@ public class DataSource {
         return null;
     }
 
-    public Object executeFindById(String query, Class<?> entityClass) {
+    public Object executeFindById(String query, Class<?> entityClass, String entityTableName) {
         try {
             Object entity = null;
             Statement stmt = this.getConnection().createStatement();
             ResultSet rs = stmt.executeQuery(query);
             if (rs != null) {
                 rs.next();
-                entity = this.createPopulatedEntity(rs, entityClass);
+                entity = this.createPopulatedEntity(rs, entityClass, entityTableName);
             }
             return entity;
         }
@@ -78,12 +80,122 @@ public class DataSource {
      * @return populated entity with the type {@code T}
      * @throws Exception
      */
-    private Object createPopulatedEntity(ResultSet rs, Class<?> clazz) throws Exception {
-        Object entity = clazz.getDeclaredConstructor().newInstance();
-        for(Field field : MacchiatoReflectionTools.getEntityFields(clazz)) {
-            this.populateEntityFieldWithJoinColumn(entity, field, rs);
+    private Object createPopulatedEntity(ResultSet rs, Class<?> entityClass, String entityTableName) throws Exception {
+        Object entity = entityClass.getDeclaredConstructor().newInstance();
+        for(Field field : MacchiatoReflectionTools.getEntityFields(entityClass)) {
+            this.populateEntityFieldWithJoinColumn(entity, entityClass, entityTableName, field, rs);
         }
         return entity;
+    }
+
+    /**
+     * Populates and returns an object entity based on a given class.
+     * @param clazz entity class
+     * @param rs SQL result set
+     * @return populated object entity
+     * @throws Exception
+     */
+    private Object createPopulatedEntityFromClass(Class clazz, ResultSet rs) throws Exception {
+        Object entity = clazz.getDeclaredConstructor().newInstance();
+        for(Field field : entity.getClass().getDeclaredFields()) {
+            this.populateEntityField(entity, field, rs);
+        }
+        return entity;
+    }
+
+    /**
+     * Populates a given entity field based on a given result set.
+     * @param entity object entity
+     * @param field field to be populated
+     * @param rs SQL result set
+     * @throws Exception
+     */
+    private void populateEntityField(Object entity, Field field, ResultSet rs) throws Exception {
+        if(field.isAnnotationPresent(Column.class)) {
+            field.setAccessible(true);
+            String entityColumnName = field.getAnnotation(Column.class).name();
+            Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
+            field.set(entity, entityColumnValueInDatabase);
+        }
+    }
+
+    /**
+     * Joins a singular relationship.
+     * <p>
+     * This method calls the join table query and returns a single foreign entity
+     * related to the primary entity.
+     * </p>
+     * @param entity primary entity.
+     * @param joinClass foreign entity class.
+     * @param table primary table.
+     * @param joinTable foreign table.
+     * @param joinColumn foreign key.
+     * @return singular foreign entity related to the primary entity.
+     */
+    private Object joinSingular(Object entity, Class<?> entityClass,  Class joinClass, String table, String joinTable, String joinColumn) {
+        Object foundEntity = null;
+
+        try {
+            ResultSet rs = this.executeQuery(
+                    QueryBuilder.joinTable(
+                            table,
+                            MacchiatoReflectionTools.getEntityIdColumn(entityClass),
+                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
+                            joinTable,
+                            joinColumn,
+                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
+                    )
+            );
+
+            if (rs != null) {
+                rs.next();
+                foundEntity = this.createPopulatedEntityFromClass(joinClass, rs);
+            }
+
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return foundEntity;
+    }
+
+    /**
+     * Joins multiple entities
+     * <p>
+     * This method calls the join table query and returns a list
+     * of foreign entities related to the primary entity.
+     * </p>
+     * @param entity primary entity
+     * @param joinClass foreign entity class
+     * @param table primary table
+     * @param joinTable foreign table
+     * @param joinColumn foreign key
+     * @return a list of foreign entities related to the primary entity.
+     */
+    private List<Object> joinMany(Object entity, Class<?> entityClass, Class joinClass, String table, String joinTable, String joinColumn) {
+        List<Object> foundEntities = new ArrayList<>();
+
+        try {
+            ResultSet rs = this.executeQuery(
+                    QueryBuilder.joinTable(
+                            table,
+                            MacchiatoReflectionTools.getEntityIdColumn(entityClass),
+                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
+                            joinTable,
+                            joinColumn,
+                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
+                    )
+            );
+            while(rs.next()) {
+                foundEntities.add(this.createPopulatedEntityFromClass(joinClass, rs));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return foundEntities;
     }
 
     /**
@@ -93,20 +205,20 @@ public class DataSource {
      * @param rs SQL result set
      * @throws Exception
      */
-    private void populateEntityFieldWithJoinColumn(Object entity, Field field, ResultSet rs) throws Exception {
+    private void populateEntityFieldWithJoinColumn(Object entity, Class<?> entityClass, String entityTableName, Field field, ResultSet rs) throws Exception {
         if(field.isAnnotationPresent(Column.class)) {
             field.setAccessible(true);
             String entityColumnName = field.getAnnotation(Column.class).name();
             Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
             field.set(entity, entityColumnValueInDatabase);
         }
-//        if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
-//            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-//            field.set(entity, this.joinSingular(entity, field.getType(), this.entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
-//        }
-//        if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
-//            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-//            field.set(entity, this.joinMany(entity, joinColumnAnnotation.referencedClass(), this.entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
-//        }
+        if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
+            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
+            field.set(entity, this.joinSingular(entity, entityClass, field.getType(), entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+        }
+        if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
+            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
+            field.set(entity, this.joinMany(entity, entityClass, joinColumnAnnotation.referencedClass(), entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+        }
     }
 }

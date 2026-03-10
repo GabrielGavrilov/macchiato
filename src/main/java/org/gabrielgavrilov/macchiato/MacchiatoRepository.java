@@ -65,7 +65,7 @@ public class MacchiatoRepository<T> {
 
         try {
             String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getEntityIdColumn(entityClass), id);
-            entity = (T) dataSource.executeFindById(query, this.entityClass);
+            entity = (T) dataSource.executeFindById(query, this.entityClass, this.entityTableName);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -183,116 +183,6 @@ public class MacchiatoRepository<T> {
         }
     }
 
-    /**
-     * Joins a singular relationship.
-     * <p>
-     * This method calls the join table query and returns a single foreign entity
-     * related to the primary entity.
-     * </p>
-     * @param entity primary entity.
-     * @param joinClass foreign entity class.
-     * @param table primary table.
-     * @param joinTable foreign table.
-     * @param joinColumn foreign key.
-     * @return singular foreign entity related to the primary entity.
-     */
-    private Object joinSingular(Object entity, Class joinClass, String table, String joinTable, String joinColumn) {
-        Object foundEntity = null;
-
-        try {
-            ResultSet rs = this.dataSource.executeQuery(
-                    QueryBuilder.joinTable(
-                            table,
-                            MacchiatoReflectionTools.getEntityIdColumn(this.entityClass),
-                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
-                            joinTable,
-                            joinColumn,
-                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
-                    )
-            );
-
-            if (rs != null) {
-                rs.next();
-                foundEntity = this.createPopulatedEntityFromClass(joinClass, rs);
-            }
-
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        return foundEntity;
-    }
-
-    /**
-     * Joins multiple entities
-     * <p>
-     * This method calls the join table query and returns a list
-     * of foreign entities related to the primary entity.
-     * </p>
-     * @param entity primary entity
-     * @param joinClass foreign entity class
-     * @param table primary table
-     * @param joinTable foreign table
-     * @param joinColumn foreign key
-     * @return a list of foreign entities related to the primary entity.
-     */
-    private List<Object> joinMany(Object entity, Class joinClass, String table, String joinTable, String joinColumn) {
-        List<Object> foundEntities = new ArrayList<>();
-
-        try {
-            ResultSet rs = this.dataSource.executeQuery(
-                    QueryBuilder.joinTable(
-                            table,
-                            MacchiatoReflectionTools.getEntityIdColumn(this.entityClass),
-                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
-                            joinTable,
-                            joinColumn,
-                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
-                    )
-            );
-            while(rs.next()) {
-                foundEntities.add(this.createPopulatedEntityFromClass(joinClass, rs));
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return foundEntities;
-    }
-
-
-    /**
-     * Populates and returns an object entity based on a given class.
-     * @param clazz entity class
-     * @param rs SQL result set
-     * @return populated object entity
-     * @throws Exception
-     */
-    private Object createPopulatedEntityFromClass(Class clazz, ResultSet rs) throws Exception {
-        Object entity = clazz.getDeclaredConstructor().newInstance();
-        for(Field field : entity.getClass().getDeclaredFields()) {
-            this.populateEntityField(entity, field, rs);
-        }
-        return entity;
-    }
-
-    /**
-     * Populates a given entity field based on a given result set.
-     * @param entity object entity
-     * @param field field to be populated
-     * @param rs SQL result set
-     * @throws Exception
-     */
-    private void populateEntityField(Object entity, Field field, ResultSet rs) throws Exception {
-        if(field.isAnnotationPresent(Column.class)) {
-            field.setAccessible(true);
-            String entityColumnName = field.getAnnotation(Column.class).name();
-            Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
-            field.set(entity, entityColumnValueInDatabase);
-        }
-    }
 
 
 }

@@ -58,19 +58,19 @@ public class MacchiatoTest {
         );
     }
 
-//    @Test
-//    public void testMacchiatoRepository_save_withJoinColumn_shouldReturnSavedEntity() {
-//        userRepository.save(john);
-//        Todo entity = todoRepository.save(foo);
-//        assertNotNull(entity);
-//        assertAll(
-//                () -> assertEquals(foo.todoId, entity.todoId),
-//                () -> assertEquals(foo.userId, entity.userId),
-//                () -> assertEquals(foo.title, entity.title),
-//                () -> assertEquals(john.userId, entity.user.userId),
-//                () -> assertEquals(john.email, entity.user.email)
-//        );
-//    }
+    @Test
+    public void testMacchiatoRepository_save_withJoinColumn_shouldReturnSavedEntity() {
+        userRepository.save(john);
+        Todo entity = todoRepository.save(foo);
+        assertNotNull(entity);
+        assertAll(
+                () -> assertEquals(foo.todoId, entity.todoId),
+                () -> assertEquals(foo.userId, entity.userId),
+                () -> assertEquals(foo.title, entity.title),
+                () -> assertEquals(john.userId, entity.user.userId),
+                () -> assertEquals(john.email, entity.user.email)
+        );
+    }
 
 //    @Test
 //    public void testMacchiatoRepository_getAll_shouldReturnAListOfAllEntities() {
@@ -122,20 +122,20 @@ public class MacchiatoTest {
 //        );
 //    }
 
-//    @Test
-//    public void testMacchiatoRepository_findById_withJoinColumn_shouldReturnEntity() {
-//        userRepository.save(john);
-//        todoRepository.save(foo);
-//        Todo entity = todoRepository.findById(String.valueOf(foo.todoId));
-//        assertNotNull(entity);
-//        assertAll(
-//                () -> assertEquals(foo.todoId, entity.todoId),
-//                () -> assertEquals(foo.userId, entity.userId),
-//                () -> assertEquals(foo.title, entity.title),
-//                () -> assertEquals(john.userId, entity.user.userId),
-//                () -> assertEquals(john.email, entity.user.email)
-//        );
-//    }
+    @Test
+    public void testMacchiatoRepository_findById_withJoinColumn_shouldReturnEntity() {
+        userRepository.save(john);
+        todoRepository.save(foo);
+        Todo entity = todoRepository.findById(String.valueOf(foo.todoId));
+        assertNotNull(entity);
+        assertAll(
+                () -> assertEquals(foo.todoId, entity.todoId),
+                () -> assertEquals(foo.userId, entity.userId),
+                () -> assertEquals(foo.title, entity.title),
+                () -> assertEquals(john.userId, entity.user.userId),
+                () -> assertEquals(john.email, entity.user.email)
+        );
+    }
 
     @Test
     public void testMacchiatoRepository_findById_withNoEntity_shouldReturnNullEntity() {
@@ -160,26 +160,26 @@ public class MacchiatoTest {
         );
     }
 
-//    @Test
-//    public void testMacchiatoRepository_update_withJoinColumn_shouldReturnUpdatedEntity() {
-//        userRepository.save(john);
-//        todoRepository.save(foo);
-//
-//        Todo oldEntity = todoRepository.findById(String.valueOf(foo.todoId));
-//        Todo updatedEntity = foo.setTitle("baz");
-//        assertNotNull(oldEntity);
-//
-//        Todo entity = todoRepository.update(updatedEntity);
-//        assertNotNull(entity);
-//
-//        assertAll(
-//                () -> assertEquals(foo.todoId, entity.todoId),
-//                () -> assertEquals(foo.userId, entity.userId),
-//                () -> assertEquals(updatedEntity.title, entity.title),
-//                () -> assertEquals(john.userId, entity.user.userId),
-//                () -> assertEquals(john.email, entity.user.email)
-//        );
-//    }
+    @Test
+    public void testMacchiatoRepository_update_withJoinColumn_shouldReturnUpdatedEntity() {
+        userRepository.save(john);
+        todoRepository.save(foo);
+
+        Todo oldEntity = todoRepository.findById(String.valueOf(foo.todoId));
+        Todo updatedEntity = foo.setTitle("baz");
+        assertNotNull(oldEntity);
+
+        Todo entity = todoRepository.update(updatedEntity);
+        assertNotNull(entity);
+
+        assertAll(
+                () -> assertEquals(foo.todoId, entity.todoId),
+                () -> assertEquals(foo.userId, entity.userId),
+                () -> assertEquals(updatedEntity.title, entity.title),
+                () -> assertEquals(john.userId, entity.user.userId),
+                () -> assertEquals(john.email, entity.user.email)
+        );
+    }
 
     @Test
     public void testMacchiatoRepository_update_withNoEntity_shouldThrowRuntimeException() {
