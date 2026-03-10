@@ -28,29 +28,16 @@ public class DataSource {
     }
 
     /**
-     * Executes a SQL query and returns a ResultSet.
-     * @param query
-     * @return ResultSet
-     */
-    public ResultSet executeQuery(String query) {
-        try {
-            Statement stmt = this.getConnection().createStatement();
-            return stmt.executeQuery(query);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
      * Executes a SQL query without returning a ResultSet.
      * @param query
      */
     public void execute(String query) {
         try {
-            Statement stmt = this.getConnection().createStatement();
+            Connection connection = getConnection();
+            Statement stmt = connection.createStatement();
             stmt.execute(query);
+            stmt.close();
+            connection.close();
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -60,12 +47,16 @@ public class DataSource {
     public Object executeFindById(String query, Class<?> entityClass, String entityTableName) {
         try {
             Object entity = null;
-            Statement stmt = this.getConnection().createStatement();
+            Connection connection = getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             if (rs != null) {
                 rs.next();
                 entity = this.createPopulatedEntity(rs, entityClass, entityTableName);
             }
+            rs.close();
+            stmt.close();
+            connection.close();
             return entity;
         }
         catch(Exception e) {
@@ -77,11 +68,15 @@ public class DataSource {
     public List<Object> executeFindAll(String query, Class<?> entityClass, String entityTableName) {
         try {
             List<Object> entities = new ArrayList<>();
-            Statement stmt = this.getConnection().createStatement();
+            Connection connection = getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             while(rs.next()) {
                 entities.add(createPopulatedEntity(rs, entityClass, entityTableName));
             }
+            rs.close();
+            stmt.close();
+            connection.close();
             return entities;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -150,21 +145,25 @@ public class DataSource {
         Object foundEntity = null;
 
         try {
-            ResultSet rs = this.executeQuery(
-                    QueryBuilder.joinTable(
-                            table,
-                            MacchiatoReflectionTools.getEntityIdColumn(entityClass),
-                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
-                            joinTable,
-                            joinColumn,
-                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
-                    )
-            );
+            Connection connection = getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs =  stmt.executeQuery(QueryBuilder.joinTable(
+                    table,
+                    MacchiatoReflectionTools.getEntityIdColumn(entityClass),
+                    MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
+                    joinTable,
+                    joinColumn,
+                    MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
+            ));
 
             if (rs != null) {
                 rs.next();
                 foundEntity = this.createPopulatedEntityFromClass(joinClass, rs);
             }
+
+            rs.close();
+            stmt.close();
+            connection.close();
 
         }
         catch(Exception e) {
@@ -191,7 +190,9 @@ public class DataSource {
         List<Object> foundEntities = new ArrayList<>();
 
         try {
-            ResultSet rs = this.executeQuery(
+            Connection connection = this.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(
                     QueryBuilder.joinTable(
                             table,
                             MacchiatoReflectionTools.getEntityIdColumn(entityClass),
@@ -204,6 +205,9 @@ public class DataSource {
             while(rs.next()) {
                 foundEntities.add(this.createPopulatedEntityFromClass(joinClass, rs));
             }
+            rs.close();
+            stmt.close();
+            connection.close();
         }
         catch (Exception e) {
             e.printStackTrace();
