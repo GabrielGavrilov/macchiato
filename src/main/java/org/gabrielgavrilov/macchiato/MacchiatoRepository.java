@@ -30,22 +30,22 @@ public class MacchiatoRepository<T> {
      * @return A list of all entities of type {@code T} retrieved from the database.
      *         If no entities are found, an empty list will be returned.
      */
-    public List<T> getAll() {
-        List<T> entities = new ArrayList<>();
-
-        try {
-            String query = QueryBuilder.getAll(entityTableName);
-            ResultSet rs = dataSource.executeQuery(query);
-            while(rs.next()) {
-                entities.add(createPopulatedEntity(rs));
-            }
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        return entities;
-    }
+//    public List<T> getAll() {
+//        List<T> entities = new ArrayList<>();
+//
+//        try {
+//            String query = QueryBuilder.getAll(entityTableName);
+//            ResultSet rs = dataSource.executeQuery(query);
+//            while(rs.next()) {
+//                entities.add(createPopulatedEntity(rs));
+//            }
+//        }
+//        catch(Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return entities;
+//    }
 
     /**
      * Retrieves an entity from the database with the given id and returns it.
@@ -65,11 +65,7 @@ public class MacchiatoRepository<T> {
 
         try {
             String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getEntityIdColumn(entityClass), id);
-            ResultSet rs = dataSource.executeQuery(query);
-            if (rs != null) {
-                rs.next();
-                entity = this.createPopulatedEntity(rs);
-            }
+            entity = (T) dataSource.executeFindById(query, this.entityClass);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -266,19 +262,6 @@ public class MacchiatoRepository<T> {
         return foundEntities;
     }
 
-    /**
-     * Populates and returns a {@code T} entity based on a given result set.
-     * @param rs SQL result set
-     * @return populated entity with the type {@code T}
-     * @throws Exception
-     */
-    private T createPopulatedEntity(ResultSet rs) throws Exception {
-        T entity = this.entityClass.getDeclaredConstructor().newInstance();
-        for(Field field : MacchiatoReflectionTools.getEntityFields(this.entityClass)) {
-            this.populateEntityFieldWithJoinColumn(entity, field, rs);
-        }
-        return entity;
-    }
 
     /**
      * Populates and returns an object entity based on a given class.
@@ -311,27 +294,5 @@ public class MacchiatoRepository<T> {
         }
     }
 
-    /**
-     * Populates a given entity field that supports join relationships, based on a given result set.
-     * @param entity object entity
-     * @param field field to be populated
-     * @param rs SQL result set
-     * @throws Exception
-     */
-    private void populateEntityFieldWithJoinColumn(Object entity, Field field, ResultSet rs) throws Exception {
-        if(field.isAnnotationPresent(Column.class)) {
-            field.setAccessible(true);
-            String entityColumnName = field.getAnnotation(Column.class).name();
-            Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
-            field.set(entity, entityColumnValueInDatabase);
-        }
-        if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
-            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinSingular(entity, field.getType(), this.entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
-        }
-        if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
-            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinMany(entity, joinColumnAnnotation.referencedClass(), this.entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
-        }
-    }
+
 }
