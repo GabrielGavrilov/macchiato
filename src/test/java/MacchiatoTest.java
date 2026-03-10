@@ -72,55 +72,55 @@ public class MacchiatoTest {
         );
     }
 
-//    @Test
-//    public void testMacchiatoRepository_getAll_shouldReturnAListOfAllEntities() {
-//        userRepository.save(john);
-//        userRepository.save(jane);
-//
-//        List<User> users = userRepository.getAll();
-//
-//        assertEquals(2, users.size());
-//        assertAll(
-//                () -> assertEquals(jane.userId, users.get(1).userId),
-//                () -> assertEquals(jane.email, users.get(1).email)
-//        );
-//    }
+    @Test
+    public void testMacchiatoRepository_getAll_shouldReturnAListOfAllEntities() {
+        userRepository.save(john);
+        userRepository.save(jane);
 
-//    @Test
-//    public void testMacchiatoRepository_getAll_withJoinColumn_shouldReturnAListOfAllEntities() {
-//        userRepository.save(john);
-//        todoRepository.save(foo);
-//        todoRepository.save(bar);
-//
-//        List<Todo> entities = todoRepository.getAll();
-//        Todo entity = entities.get(1);
-//
-//        assertEquals(2, entities.size());
-//        assertAll(
-//                () -> assertEquals(bar.todoId, entity.todoId),
-//                () -> assertEquals(bar.userId, entity.userId),
-//                () -> assertEquals(bar.title, entity.title),
-//                () -> assertEquals(john.userId, entity.user.userId),
-//                () -> assertEquals(john.email, entity.user.email)
-//        );
-//    }
+        List<User> users = userRepository.getAll();
 
-//    @Test
-//    public void testMacchiatoRepository_getAll_withNoEntities_shouldReturnAnEmptyList() {
-//        List<User> users = userRepository.getAll();
-//        assertEquals(0, users.size());
-//    }
-//
-//    @Test
-//    public void testMacchiatoRepository_findById_shouldReturnEntity() {
-//        userRepository.save(john);
-//        User entity = userRepository.findById(String.valueOf(john.userId));
-//        assertNotNull(entity);
-//        assertAll(
-//                () -> assertEquals(john.userId, entity.userId),
-//                () -> assertEquals(john.email, entity.email)
-//        );
-//    }
+        assertEquals(2, users.size());
+        assertAll(
+                () -> assertEquals(jane.userId, users.get(1).userId),
+                () -> assertEquals(jane.email, users.get(1).email)
+        );
+    }
+
+    @Test
+    public void testMacchiatoRepository_getAll_withJoinColumn_shouldReturnAListOfAllEntities() {
+        userRepository.save(john);
+        todoRepository.save(foo);
+        todoRepository.save(bar);
+
+        List<Todo> entities = todoRepository.getAll();
+        Todo entity = entities.get(1);
+
+        assertEquals(2, entities.size());
+        assertAll(
+                () -> assertEquals(bar.todoId, entity.todoId),
+                () -> assertEquals(bar.userId, entity.userId),
+                () -> assertEquals(bar.title, entity.title),
+                () -> assertEquals(john.userId, entity.user.userId),
+                () -> assertEquals(john.email, entity.user.email)
+        );
+    }
+
+    @Test
+    public void testMacchiatoRepository_getAll_withNoEntities_shouldReturnAnEmptyList() {
+        List<User> users = userRepository.getAll();
+        assertEquals(0, users.size());
+    }
+
+    @Test
+    public void testMacchiatoRepository_findById_shouldReturnEntity() {
+        userRepository.save(john);
+        User entity = userRepository.findById(String.valueOf(john.userId));
+        assertNotNull(entity);
+        assertAll(
+                () -> assertEquals(john.userId, entity.userId),
+                () -> assertEquals(john.email, entity.email)
+        );
+    }
 
     @Test
     public void testMacchiatoRepository_findById_withJoinColumn_shouldReturnEntity() {

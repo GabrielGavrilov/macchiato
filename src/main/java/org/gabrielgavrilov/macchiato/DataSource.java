@@ -43,6 +43,20 @@ public class DataSource {
         return null;
     }
 
+    /**
+     * Executes a SQL query without returning a ResultSet.
+     * @param query
+     */
+    public void execute(String query) {
+        try {
+            Statement stmt = this.getConnection().createStatement();
+            stmt.execute(query);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public Object executeFindById(String query, Class<?> entityClass, String entityTableName) {
         try {
             Object entity = null;
@@ -60,17 +74,17 @@ public class DataSource {
         return null;
     }
 
-    /**
-     * Executes a SQL query without returning a ResultSet.
-     * @param query
-     */
-    public void execute(String query) {
+    public List<Object> executeFindAll(String query, Class<?> entityClass, String entityTableName) {
         try {
+            List<Object> entities = new ArrayList<>();
             Statement stmt = this.getConnection().createStatement();
-            stmt.execute(query);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
+            ResultSet rs = stmt.executeQuery(query);
+            while(rs.next()) {
+                entities.add(createPopulatedEntity(rs, entityClass, entityTableName));
+            }
+            return entities;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

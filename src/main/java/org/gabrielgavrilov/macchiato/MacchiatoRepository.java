@@ -30,22 +30,20 @@ public class MacchiatoRepository<T> {
      * @return A list of all entities of type {@code T} retrieved from the database.
      *         If no entities are found, an empty list will be returned.
      */
-//    public List<T> getAll() {
-//        List<T> entities = new ArrayList<>();
-//
-//        try {
-//            String query = QueryBuilder.getAll(entityTableName);
-//            ResultSet rs = dataSource.executeQuery(query);
-//            while(rs.next()) {
-//                entities.add(createPopulatedEntity(rs));
-//            }
-//        }
-//        catch(Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return entities;
-//    }
+    public List<T> getAll() {
+        List<T> entities = new ArrayList<>();
+
+        try {
+            String query = QueryBuilder.getAll(entityTableName);
+            entities = (List<T>) dataSource.executeFindAll(query, entityClass, entityTableName);
+
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return entities;
+    }
 
     /**
      * Retrieves an entity from the database with the given id and returns it.
