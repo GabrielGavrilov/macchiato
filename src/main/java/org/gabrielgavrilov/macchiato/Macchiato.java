@@ -2,20 +2,18 @@ package org.gabrielgavrilov.macchiato;
 
 public class Macchiato {
 
-    // TODO: Error handling
-
-    private static DataSource dataSource;
+    private static MacchiatoDriverManager macchiatoDriverManager;
 
     public static void initialize(String databaseUrl) {
-        dataSource = new DataSource(databaseUrl);
+        macchiatoDriverManager = new MacchiatoDriverManager(databaseUrl);
     }
 
-    public static DataSource getDataSource() {
-        if (dataSource == null) {
+    public static MacchiatoDriverManager getDriverManager() {
+        if (macchiatoDriverManager == null) {
             // fix this
             throw new IllegalStateException("DataSource has not been initialized");
         }
-        return dataSource;
+        return macchiatoDriverManager;
     }
 
 }

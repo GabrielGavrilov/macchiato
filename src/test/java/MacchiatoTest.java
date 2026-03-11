@@ -3,6 +3,7 @@ import core.entities.User;
 import core.repositories.TodoRepository;
 import core.repositories.UserRepository;
 import org.gabrielgavrilov.macchiato.Macchiato;
+import org.gabrielgavrilov.macchiato.MacchiatoQueryExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -217,7 +218,7 @@ public class MacchiatoTest {
     }
 
     private void execute(String query) {
-        Macchiato.getDataSource().execute(query);
+        new MacchiatoQueryExecutor(Macchiato.getDriverManager()).execute(query);
     }
 
 

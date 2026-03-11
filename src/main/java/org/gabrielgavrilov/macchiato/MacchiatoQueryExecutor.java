@@ -7,24 +7,15 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataSource {
+public class MacchiatoQueryExecutor {
 
-    private final String databaseUrl;
+    private final MacchiatoDriverManager driverManager;
 
     /**
      * Initializes the DataSource and connects to the given database.
      */
-    public DataSource(String databaseUrl) {
-        this.databaseUrl = databaseUrl;
-    }
-
-    public Connection getConnection() {
-        try {
-            return DriverManager.getConnection(this.databaseUrl);
-        } catch (SQLException e) {
-            // Todo: fix this
-            throw new RuntimeException(e);
-        }
+    public MacchiatoQueryExecutor(MacchiatoDriverManager driverManager) {
+        this.driverManager = driverManager;
     }
 
     /**
@@ -33,7 +24,7 @@ public class DataSource {
      */
     public void execute(String query) {
         try {
-            Connection connection = getConnection();
+            Connection connection = driverManager.getConnection();
             Statement stmt = connection.createStatement();
             stmt.execute(query);
             stmt.close();
@@ -44,11 +35,31 @@ public class DataSource {
         }
     }
 
-    public Object executeFindById(String query, Class<?> entityClass, String entityTableName) {
+    public List<Object> executeFindAll(Class<?> entityClass, String entityTableName) {
+        try {
+            List<Object> entities = new ArrayList<>();
+            Connection connection = driverManager.getConnection();
+            Statement stmt = connection.createStatement();
+            String query = QueryBuilder.getAll(entityTableName);
+            ResultSet rs = stmt.executeQuery(query);
+            while(rs.next()) {
+                entities.add(createPopulatedEntity(rs, entityClass, entityTableName));
+            }
+            rs.close();
+            stmt.close();
+            connection.close();
+            return entities;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Object executeFindById(String id, Class<?> entityClass, String entityTableName) {
         try {
             Object entity = null;
-            Connection connection = getConnection();
+            Connection connection = driverManager.getConnection();
             Statement stmt = connection.createStatement();
+            String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id);
             ResultSet rs = stmt.executeQuery(query);
             if (rs != null) {
                 rs.next();
@@ -65,23 +76,7 @@ public class DataSource {
         return null;
     }
 
-    public List<Object> executeFindAll(String query, Class<?> entityClass, String entityTableName) {
-        try {
-            List<Object> entities = new ArrayList<>();
-            Connection connection = getConnection();
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
-            while(rs.next()) {
-                entities.add(createPopulatedEntity(rs, entityClass, entityTableName));
-            }
-            rs.close();
-            stmt.close();
-            connection.close();
-            return entities;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+
 
     /**
      * Populates and returns a {@code T} entity based on a given result set.
@@ -145,7 +140,7 @@ public class DataSource {
         Object foundEntity = null;
 
         try {
-            Connection connection = getConnection();
+            Connection connection = driverManager.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs =  stmt.executeQuery(QueryBuilder.joinTable(
                     table,
@@ -190,7 +185,7 @@ public class DataSource {
         List<Object> foundEntities = new ArrayList<>();
 
         try {
-            Connection connection = this.getConnection();
+            Connection connection = this.driverManager.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     QueryBuilder.joinTable(

@@ -2,8 +2,6 @@ package org.gabrielgavrilov.macchiato;
 
 import org.gabrielgavrilov.macchiato.annotations.*;
 
-import java.lang.reflect.Field;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,10 +10,10 @@ public class MacchiatoRepository<T> {
 
     private final Class<T> entityClass = (Class<T>) MacchiatoReflectionTools.getGenericClassType(this.getClass());
     private final String entityTableName = entityClass.getAnnotation(Table.class).name();
-    private final DataSource dataSource;
+    private final MacchiatoQueryExecutor queryExecutor;
 
     public MacchiatoRepository() {
-        this.dataSource = Macchiato.getDataSource();
+        this.queryExecutor = new MacchiatoQueryExecutor(Macchiato.getDriverManager());
     }
 
     /**
@@ -34,8 +32,7 @@ public class MacchiatoRepository<T> {
         List<T> entities = new ArrayList<>();
 
         try {
-            String query = QueryBuilder.getAll(entityTableName);
-            entities = (List<T>) dataSource.executeFindAll(query, entityClass, entityTableName);
+            entities = (List<T>) queryExecutor.executeFindAll(entityClass, entityTableName);
 
         }
         catch(Exception e) {
@@ -62,8 +59,7 @@ public class MacchiatoRepository<T> {
         T entity = null;
 
         try {
-            String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id);
-            entity = (T) dataSource.executeFindById(query, this.entityClass, this.entityTableName);
+            entity = (T) queryExecutor.executeFindById(id, this.entityClass, this.entityTableName);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -87,7 +83,7 @@ public class MacchiatoRepository<T> {
         T savedEntity = null;
         try {
             HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
-            this.dataSource.execute(
+            this.queryExecutor.execute(
                     QueryBuilder.save(
                             this.entityTableName,
                             new ArrayList<String>(columnsAndValues.keySet()),
@@ -124,7 +120,7 @@ public class MacchiatoRepository<T> {
             }
             else {
                 HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
-                this.dataSource.execute(
+                this.queryExecutor.execute(
                         QueryBuilder.update(
                                 this.entityTableName,
                                 new ArrayList<String>(columnsAndValues.keySet()),
@@ -155,7 +151,7 @@ public class MacchiatoRepository<T> {
         try {
             Object exists = this.findById(id);
             if (exists != null) {
-                this.dataSource.execute(QueryBuilder.delete(this.entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(this.entityClass), id));
+                this.queryExecutor.execute(QueryBuilder.delete(this.entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(this.entityClass), id));
             }
         }
         catch(Exception e) {
