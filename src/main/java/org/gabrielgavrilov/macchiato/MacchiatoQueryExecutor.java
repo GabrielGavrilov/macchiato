@@ -5,6 +5,7 @@ import org.gabrielgavrilov.macchiato.annotations.*;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MacchiatoQueryExecutor {
@@ -76,7 +77,35 @@ public class MacchiatoQueryExecutor {
         return null;
     }
 
+    public Object executeSave(Object entity, String entityTableName) {
+        HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
+        String query = QueryBuilder.save(
+                entityTableName,
+                new ArrayList<String>(columnsAndValues.keySet()),
+                new ArrayList<String>(columnsAndValues.values())
+        );
 
+        this.execute(query);
+        return executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
+    }
+
+    public Object executeUpdate(Object entity, String entityTableName) {
+        Object exists = this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
+        if (exists == null) {
+            return null;
+        }
+        HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
+        this.execute(
+                QueryBuilder.update(
+                        entityTableName,
+                        new ArrayList<String>(columnsAndValues.keySet()),
+                        new ArrayList<String>(columnsAndValues.values()),
+                        MacchiatoReflectionTools.getColumnIdNameFromClass(entity.getClass()),
+                        MacchiatoReflectionTools.getColumnIdValueFromObject(entity)
+                )
+        );
+        return this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
+    }
 
     /**
      * Populates and returns a {@code T} entity based on a given result set.

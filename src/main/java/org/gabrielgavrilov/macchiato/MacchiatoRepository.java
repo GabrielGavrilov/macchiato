@@ -82,15 +82,7 @@ public class MacchiatoRepository<T> {
     public T save(Object entity) {
         T savedEntity = null;
         try {
-            HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
-            this.queryExecutor.execute(
-                    QueryBuilder.save(
-                            this.entityTableName,
-                            new ArrayList<String>(columnsAndValues.keySet()),
-                            new ArrayList<String>(columnsAndValues.values())
-                    )
-            );
-            savedEntity = this.findById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
+            savedEntity = (T) queryExecutor.executeSave(entity, this.entityTableName);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -113,24 +105,7 @@ public class MacchiatoRepository<T> {
     public T update(Object entity) {
         T updatedEntity = null;
         try {
-            Object exists = this.findById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
-            if (exists == null) {
-                // TODO: throw something else
-                throw new RuntimeException();
-            }
-            else {
-                HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
-                this.queryExecutor.execute(
-                        QueryBuilder.update(
-                                this.entityTableName,
-                                new ArrayList<String>(columnsAndValues.keySet()),
-                                new ArrayList<String>(columnsAndValues.values()),
-                                MacchiatoReflectionTools.getColumnIdNameFromClass(this.entityClass),
-                                MacchiatoReflectionTools.getColumnIdValueFromObject(entity)
-                        )
-                );
-                updatedEntity = this.findById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
-            }
+            updatedEntity = (T) queryExecutor.executeUpdate(entity, this.entityTableName);
         }
         catch(Exception e) {
             throw new RuntimeException();
@@ -176,7 +151,5 @@ public class MacchiatoRepository<T> {
             e.printStackTrace();
         }
     }
-
-
 
 }
