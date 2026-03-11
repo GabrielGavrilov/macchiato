@@ -62,7 +62,7 @@ public class MacchiatoRepository<T> {
         T entity = null;
 
         try {
-            String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getEntityIdColumn(entityClass), id);
+            String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id);
             entity = (T) dataSource.executeFindById(query, this.entityClass, this.entityTableName);
         }
         catch(Exception e) {
@@ -86,7 +86,7 @@ public class MacchiatoRepository<T> {
     public T save(Object entity) {
         T savedEntity = null;
         try {
-            HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.getColumnNamesAndValuesFromObject(entity);
+            HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
             this.dataSource.execute(
                     QueryBuilder.save(
                             this.entityTableName,
@@ -94,7 +94,7 @@ public class MacchiatoRepository<T> {
                             new ArrayList<String>(columnsAndValues.values())
                     )
             );
-            savedEntity = this.findById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
+            savedEntity = this.findById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -117,23 +117,23 @@ public class MacchiatoRepository<T> {
     public T update(Object entity) {
         T updatedEntity = null;
         try {
-            Object exists = this.findById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
+            Object exists = this.findById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
             if (exists == null) {
                 // TODO: throw something else
                 throw new RuntimeException();
             }
             else {
-                HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.getColumnNamesAndValuesFromObject(entity);
+                HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
                 this.dataSource.execute(
                         QueryBuilder.update(
                                 this.entityTableName,
                                 new ArrayList<String>(columnsAndValues.keySet()),
                                 new ArrayList<String>(columnsAndValues.values()),
-                                MacchiatoReflectionTools.getEntityIdColumn(this.entityClass),
-                                MacchiatoReflectionTools.getIdValueFromObjectEntity(entity)
+                                MacchiatoReflectionTools.getColumnIdNameFromClass(this.entityClass),
+                                MacchiatoReflectionTools.getColumnIdValueFromObject(entity)
                         )
                 );
-                updatedEntity = this.findById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
+                updatedEntity = this.findById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
             }
         }
         catch(Exception e) {
@@ -155,7 +155,7 @@ public class MacchiatoRepository<T> {
         try {
             Object exists = this.findById(id);
             if (exists != null) {
-                this.dataSource.execute(QueryBuilder.delete(this.entityTableName, MacchiatoReflectionTools.getEntityIdColumn(this.entityClass), id));
+                this.dataSource.execute(QueryBuilder.delete(this.entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(this.entityClass), id));
             }
         }
         catch(Exception e) {
@@ -174,7 +174,7 @@ public class MacchiatoRepository<T> {
      */
     public void delete(Object entity) {
         try {
-            this.deleteById(MacchiatoReflectionTools.getIdValueFromObjectEntity(entity));
+            this.deleteById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
         }
         catch(Exception e) {
             e.printStackTrace();

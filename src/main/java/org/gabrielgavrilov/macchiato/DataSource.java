@@ -91,7 +91,7 @@ public class DataSource {
      */
     private Object createPopulatedEntity(ResultSet rs, Class<?> entityClass, String entityTableName) throws Exception {
         Object entity = entityClass.getDeclaredConstructor().newInstance();
-        for(Field field : MacchiatoReflectionTools.getEntityFields(entityClass)) {
+        for(Field field : MacchiatoReflectionTools.getListOfFieldsFromClass(entityClass)) {
             this.populateEntityFieldWithJoinColumn(entity, entityClass, entityTableName, field, rs);
         }
         return entity;
@@ -149,11 +149,11 @@ public class DataSource {
             Statement stmt = connection.createStatement();
             ResultSet rs =  stmt.executeQuery(QueryBuilder.joinTable(
                     table,
-                    MacchiatoReflectionTools.getEntityIdColumn(entityClass),
-                    MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
+                    MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass),
+                    MacchiatoReflectionTools.getColumnIdValueFromObject(entity),
                     joinTable,
                     joinColumn,
-                    MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
+                    MacchiatoReflectionTools.getAllColumnNamesFromClass(joinClass)
             ));
 
             if (rs != null) {
@@ -195,11 +195,11 @@ public class DataSource {
             ResultSet rs = stmt.executeQuery(
                     QueryBuilder.joinTable(
                             table,
-                            MacchiatoReflectionTools.getEntityIdColumn(entityClass),
-                            MacchiatoReflectionTools.getIdValueFromObjectEntity(entity),
+                            MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass),
+                            MacchiatoReflectionTools.getColumnIdValueFromObject(entity),
                             joinTable,
                             joinColumn,
-                            MacchiatoReflectionTools.getColumnNamesFromClass(joinClass)
+                            MacchiatoReflectionTools.getAllColumnNamesFromClass(joinClass)
                     )
             );
             while(rs.next()) {
