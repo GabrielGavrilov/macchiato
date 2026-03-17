@@ -5,6 +5,7 @@ import org.gabrielgavrilov.macchiato.annotations.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 public class MacchiatoRepository<T> {
 
@@ -55,17 +56,10 @@ public class MacchiatoRepository<T> {
      * @return An entity with the type {@code T} retrieved from the database.
      *         If no entity was found, null type {@code T} will be returned.
      */
-    public T findById(String id) {
-        T entity = null;
-
-        try {
-            entity = (T) queryExecutor.executeFindById(id, this.entityClass, this.entityTableName);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        return entity;
+    public Optional<T> findById(String id) {
+        return queryExecutor
+                .executeFindById(id, this.entityClass, this.entityTableName)
+                .map(e -> (T) e);
     }
 
     /**
@@ -79,15 +73,10 @@ public class MacchiatoRepository<T> {
      * @param entity a constructed object of the entity that's to be saved
      *               in the table associated with the entity class.
      */
-    public T save(Object entity) {
-        T savedEntity = null;
-        try {
-            savedEntity = (T) queryExecutor.executeSave(entity, this.entityTableName);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-        return savedEntity;
+    public Optional<T> save(T entity) {
+        return queryExecutor
+                .executeSave(entity, this.entityTableName)
+                .map(e -> (T) e);
     }
 
     /**
@@ -102,15 +91,10 @@ public class MacchiatoRepository<T> {
      * @param entity a constructed object of the entity that's to be updated
      *               in the table associated with the entity class.
      */
-    public T update(Object entity) {
-        T updatedEntity = null;
-        try {
-            updatedEntity = (T) queryExecutor.executeUpdate(entity, this.entityTableName);
-        }
-        catch(Exception e) {
-            throw new RuntimeException();
-        }
-        return updatedEntity;
+    public Optional<T> update(Object entity) {
+        return queryExecutor
+                .executeUpdate(entity, this.entityTableName)
+                .map(e -> (T) e);
     }
 
     /**

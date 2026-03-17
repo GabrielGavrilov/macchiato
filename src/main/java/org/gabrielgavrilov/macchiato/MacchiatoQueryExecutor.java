@@ -7,6 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 public class MacchiatoQueryExecutor {
 
@@ -32,7 +33,7 @@ public class MacchiatoQueryExecutor {
             connection.close();
         }
         catch(Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -55,29 +56,29 @@ public class MacchiatoQueryExecutor {
         }
     }
 
-    public Object executeFindById(String id, Class<?> entityClass, String entityTableName) {
+    public Optional<Object> executeFindById(String id, Class<?> entityClass, String entityTableName) {
         try {
             Object entity = null;
             Connection connection = driverManager.getConnection();
             Statement stmt = connection.createStatement();
             String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id);
             ResultSet rs = stmt.executeQuery(query);
-            if (rs != null) {
-                rs.next();
+            if (rs.next()) {
                 entity = this.createPopulatedEntity(rs, entityClass, entityTableName);
+            } else {
+                return Optional.empty();
             }
             rs.close();
             stmt.close();
             connection.close();
-            return entity;
+            return Optional.of(entity);
         }
         catch(Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
-    public Object executeSave(Object entity, String entityTableName) {
+    public Optional<Object> executeSave(Object entity, String entityTableName) {
         HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
         String query = QueryBuilder.save(
                 entityTableName,
@@ -89,10 +90,11 @@ public class MacchiatoQueryExecutor {
         return executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
     }
 
-    public Object executeUpdate(Object entity, String entityTableName) {
-        Object exists = this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
-        if (exists == null) {
-            return null;
+    public Optional<Object> executeUpdate(Object entity, String entityTableName) {
+        Optional<Object> exists = this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
+        if (exists.isEmpty()) {
+            // Todo: change?
+            throw new RuntimeException("Entity does not exist");
         }
         HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
         this.execute(
