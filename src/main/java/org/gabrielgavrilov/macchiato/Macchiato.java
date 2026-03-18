@@ -1,22 +1,19 @@
 package org.gabrielgavrilov.macchiato;
 
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConfigurationException;
+
 public class Macchiato {
 
-    // TODO: Error handling
-    // TODO: Better database url connection handling (current one is too unsafe.)
-
-    private static DataSource dataSource;
+    private static MacchiatoDriverManager macchiatoDriverManager;
 
     public static void initialize(String databaseUrl) {
-        dataSource = new DataSource(databaseUrl);
+        macchiatoDriverManager = new MacchiatoDriverManager(databaseUrl);
     }
 
-    public static DataSource getDataSource() {
-        if (dataSource == null) {
-            // fix this
-            throw new IllegalStateException("DataSource has not been initialized");
-        }
-        return dataSource;
+    public static MacchiatoDriverManager getDriverManager() {
+        if (macchiatoDriverManager == null)
+            throw new MacchiatoConfigurationException("DataSource has not been initialized");
+        return macchiatoDriverManager;
     }
 
 }

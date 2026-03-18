@@ -3,11 +3,15 @@ import core.entities.User;
 import core.repositories.TodoRepository;
 import core.repositories.UserRepository;
 import org.gabrielgavrilov.macchiato.Macchiato;
+import org.gabrielgavrilov.macchiato.MacchiatoQueryExecutor;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConstraintViolationException;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoEntityDoesNotExistException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,25 +54,25 @@ public class MacchiatoTest {
 
     @Test
     public void testMacchiatoRepository_save_shouldReturnSavedEntity() {
-        User user = userRepository.save(john);
-        assertNotNull(user);
+        Optional<User> user = userRepository.save(john);
+        assertTrue(user.isPresent());
         assertAll(
-                () -> assertEquals(john.userId, user.userId),
-                () -> assertEquals(john.email, user.email)
+                () -> assertEquals(john.userId, user.get().userId),
+                () -> assertEquals(john.email, user.get().email)
         );
     }
 
     @Test
     public void testMacchiatoRepository_save_withJoinColumn_shouldReturnSavedEntity() {
         userRepository.save(john);
-        Todo entity = todoRepository.save(foo);
-        assertNotNull(entity);
+        Optional<Todo> entity = todoRepository.save(foo);
+        assertTrue(entity.isPresent());
         assertAll(
-                () -> assertEquals(foo.todoId, entity.todoId),
-                () -> assertEquals(foo.userId, entity.userId),
-                () -> assertEquals(foo.title, entity.title),
-                () -> assertEquals(john.userId, entity.user.userId),
-                () -> assertEquals(john.email, entity.user.email)
+                () -> assertEquals(foo.todoId, entity.get().todoId),
+                () -> assertEquals(foo.userId, entity.get().userId),
+                () -> assertEquals(foo.title, entity.get().title),
+                () -> assertEquals(john.userId, entity.get().user.userId),
+                () -> assertEquals(john.email, entity.get().user.email)
         );
     }
 
@@ -77,7 +81,7 @@ public class MacchiatoTest {
         userRepository.save(john);
         userRepository.save(jane);
 
-        List<User> users = userRepository.getAll();
+        List<User> users = userRepository.findAll();
 
         assertEquals(2, users.size());
         assertAll(
@@ -92,7 +96,7 @@ public class MacchiatoTest {
         todoRepository.save(foo);
         todoRepository.save(bar);
 
-        List<Todo> entities = todoRepository.getAll();
+        List<Todo> entities = todoRepository.findAll();
         Todo entity = entities.get(1);
 
         assertEquals(2, entities.size());
@@ -107,18 +111,18 @@ public class MacchiatoTest {
 
     @Test
     public void testMacchiatoRepository_getAll_withNoEntities_shouldReturnAnEmptyList() {
-        List<User> users = userRepository.getAll();
+        List<User> users = userRepository.findAll();
         assertEquals(0, users.size());
     }
 
     @Test
     public void testMacchiatoRepository_findById_shouldReturnEntity() {
         userRepository.save(john);
-        User entity = userRepository.findById(String.valueOf(john.userId));
-        assertNotNull(entity);
+        Optional<User> entity = userRepository.findById(String.valueOf(john.userId));
+        assertTrue(entity.isPresent());
         assertAll(
-                () -> assertEquals(john.userId, entity.userId),
-                () -> assertEquals(john.email, entity.email)
+                () -> assertEquals(john.userId, entity.get().userId),
+                () -> assertEquals(john.email, entity.get().email)
         );
     }
 
@@ -126,37 +130,37 @@ public class MacchiatoTest {
     public void testMacchiatoRepository_findById_withJoinColumn_shouldReturnEntity() {
         userRepository.save(john);
         todoRepository.save(foo);
-        Todo entity = todoRepository.findById(String.valueOf(foo.todoId));
-        assertNotNull(entity);
+        Optional<Todo> entity = todoRepository.findById(String.valueOf(foo.todoId));
+        assertTrue(entity.isPresent());
         assertAll(
-                () -> assertEquals(foo.todoId, entity.todoId),
-                () -> assertEquals(foo.userId, entity.userId),
-                () -> assertEquals(foo.title, entity.title),
-                () -> assertEquals(john.userId, entity.user.userId),
-                () -> assertEquals(john.email, entity.user.email)
+                () -> assertEquals(foo.todoId, entity.get().todoId),
+                () -> assertEquals(foo.userId, entity.get().userId),
+                () -> assertEquals(foo.title, entity.get().title),
+                () -> assertEquals(john.userId, entity.get().user.userId),
+                () -> assertEquals(john.email, entity.get().user.email)
         );
     }
 
     @Test
-    public void testMacchiatoRepository_findById_withNoEntity_shouldReturnNullEntity() {
-        User entity = userRepository.findById(String.valueOf(new UUID(0,1)));
-        assertNull(entity);
+    public void testMacchiatoRepository_findById_withNoEntity_shouldReturnEmptyOptionalEntity() {
+        Optional<User> entity = userRepository.findById(String.valueOf(new UUID(0,1)));
+        assertFalse(entity.isPresent());
     }
 
     @Test
     public void testMacchiatoRepository_update_shouldReturnUpdatedEntity() {
         userRepository.save(john);
 
-        User oldEntity = userRepository.findById(String.valueOf(john.userId));
+        Optional<User> oldEntity = userRepository.findById(String.valueOf(john.userId));
         User updatedEntity = john.setEmail("johndoe1@gmail.com");
-        assertNotNull(oldEntity);
+        assertTrue(oldEntity.isPresent());
 
-        User entity = userRepository.update(updatedEntity);
-        assertNotNull(entity);
+        Optional<User> entity = userRepository.update(updatedEntity);
+        assertTrue(entity.isPresent());
 
         assertAll(
-                () -> assertEquals(john.userId, entity.userId),
-                () -> assertEquals(updatedEntity.email, entity.email)
+                () -> assertEquals(john.userId, entity.get().userId),
+                () -> assertEquals(updatedEntity.email, entity.get().email)
         );
     }
 
@@ -165,59 +169,58 @@ public class MacchiatoTest {
         userRepository.save(john);
         todoRepository.save(foo);
 
-        Todo oldEntity = todoRepository.findById(String.valueOf(foo.todoId));
+        Optional<Todo> oldEntity = todoRepository.findById(String.valueOf(foo.todoId));
         Todo updatedEntity = foo.setTitle("baz");
         assertNotNull(oldEntity);
 
-        Todo entity = todoRepository.update(updatedEntity);
-        assertNotNull(entity);
+        Optional<Todo> entity = todoRepository.update(updatedEntity);
+        assertTrue(entity.isPresent());
 
         assertAll(
-                () -> assertEquals(foo.todoId, entity.todoId),
-                () -> assertEquals(foo.userId, entity.userId),
-                () -> assertEquals(updatedEntity.title, entity.title),
-                () -> assertEquals(john.userId, entity.user.userId),
-                () -> assertEquals(john.email, entity.user.email)
+                () -> assertEquals(foo.todoId, entity.get().todoId),
+                () -> assertEquals(foo.userId, entity.get().userId),
+                () -> assertEquals(updatedEntity.title, entity.get().title),
+                () -> assertEquals(john.userId, entity.get().user.userId),
+                () -> assertEquals(john.email, entity.get().user.email)
         );
     }
 
     @Test
     public void testMacchiatoRepository_update_withNoEntity_shouldThrowRuntimeException() {
-        assertThrows(RuntimeException.class, () -> userRepository.update(john));
+        assertThrows(MacchiatoEntityDoesNotExistException.class, () -> userRepository.update(john));
+//        assertFalse(userRepository.update(john).isPresent());
     }
 
     @Test
     public void testMacchiatoRepository_delete_shouldDeleteEntity() {
         userRepository.save(john);
-        User entity = userRepository.findById(String.valueOf(john.userId));
+        Optional<User> entity = userRepository.findById(String.valueOf(john.userId));
         assertNotNull(entity);
         userRepository.delete(john);
         entity = userRepository.findById(String.valueOf(john.userId));
-        assertNull(entity);
+        assertTrue(entity.isEmpty());
     }
 
     @Test
     public void testMacchiatoRepository_delete_withJoinColumn_shouldDeleteEntity() {
         userRepository.save(john);
         todoRepository.save(foo);
-        assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
+        assertTrue(todoRepository.findById(String.valueOf(foo.todoId)).isPresent());
         todoRepository.delete(foo);
-        assertNull(todoRepository.findById(String.valueOf(foo.todoId)));
+        assertFalse(todoRepository.findById(String.valueOf(foo.todoId)).isPresent());
     }
 
     @Test
     public void testMacchiatoRepository_delete_withJoinColumn_deleteForeignEntity_shouldNotDeleteForeignEntity() {
-        // TODO: maybe throw error?
         userRepository.save(john);
         todoRepository.save(foo);
-        assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
-        userRepository.delete(john);
-        assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
-        assertNotNull(userRepository.findById(String.valueOf(john.userId)));
+        assertTrue(todoRepository.findById(String.valueOf(foo.todoId)).isPresent());
+        assertThrows(MacchiatoConstraintViolationException.class, () -> userRepository.delete(john));
+        assertTrue(todoRepository.findById(String.valueOf(foo.todoId)).isPresent());
     }
 
     private void execute(String query) {
-        Macchiato.getDataSource().execute(query);
+        new MacchiatoQueryExecutor(Macchiato.getDriverManager()).execute(query);
     }
 
 

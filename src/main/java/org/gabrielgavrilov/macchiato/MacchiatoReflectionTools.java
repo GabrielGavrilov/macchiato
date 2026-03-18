@@ -16,7 +16,7 @@ public class MacchiatoReflectionTools {
      * Returns a list of fields that belong to the generic entity of the class.
      * @return list of fields that belong to the generic entity.
      */
-    public static List<Field> getEntityFields(Class<?> clazz) {
+    public static List<Field> getListOfFieldsFromClass(Class<?> clazz) {
         return List.of(clazz.getDeclaredFields());
     }
 
@@ -35,7 +35,7 @@ public class MacchiatoReflectionTools {
      * @param clazz class to retrieve column names from.
      * @return list of column names that belong to a given class.
      */
-    public static List<String> getColumnNamesFromClass(Class<?> clazz) {
+    public static List<String> getAllColumnNamesFromClass(Class<?> clazz) {
         List<String> columns = new ArrayList<>();
         for(Field field : clazz.getDeclaredFields()) {
             if(field.isAnnotationPresent(Column.class)) {
@@ -52,7 +52,7 @@ public class MacchiatoReflectionTools {
      * @return HashMap of column names and their associated values
      * @throws Exception
      */
-    public static HashMap<String, String> getColumnNamesAndValuesFromObject(Object entity) {
+    public static HashMap<String, String> mapColumnNamesToValuesFromObject(Object entity) {
         try {
             HashMap<String, String> columnsAndValues = new HashMap<>();
 
@@ -72,7 +72,7 @@ public class MacchiatoReflectionTools {
      * Returns the entity id column that belongs to the generic entity of the class.
      * @return string id column
      */
-    public static String getEntityIdColumn(Class<?> clazz) {
+    public static String getColumnIdNameFromClass(Class<?> clazz) {
         for(Field field : clazz.getDeclaredFields()) {
             if(field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
                 return field.getAnnotation(Column.class).name();
@@ -87,7 +87,7 @@ public class MacchiatoReflectionTools {
      * @return string id value
      * @throws Exception
      */
-    public static String getIdValueFromObjectEntity(Object entity) {
+    public static String getColumnIdValueFromObject(Object entity) {
         try {
             for(Field field : entity.getClass().getDeclaredFields()) {
                 if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(Column.class)) {
