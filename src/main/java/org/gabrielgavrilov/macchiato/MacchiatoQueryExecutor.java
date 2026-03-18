@@ -7,6 +7,7 @@ import org.gabrielgavrilov.macchiato.exceptions.MacchiatoEntityDoesNotExistExcep
 import org.gabrielgavrilov.macchiato.exceptions.MacchiatoException;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +33,9 @@ public class MacchiatoQueryExecutor {
         try {
             Connection connection = driverManager.getConnection();
             Statement stmt = connection.createStatement();
+
             stmt.execute(query);
+
             stmt.close();
             connection.close();
         }
@@ -62,16 +65,21 @@ public class MacchiatoQueryExecutor {
     public List<Object> executeFindAll(Class<?> entityClass, String entityTableName) {
         try {
             List<Object> entities = new ArrayList<>();
+
             Connection connection = driverManager.getConnection();
             Statement stmt = connection.createStatement();
+
             String query = QueryBuilder.getAll(entityTableName);
             ResultSet rs = stmt.executeQuery(query);
+
             while(rs.next()) {
-                entities.add(createPopulatedEntity(rs, entityClass, entityTableName));
+                entities.add(createEntityWithJoins(rs, entityClass, entityTableName));
             }
+
             rs.close();
             stmt.close();
             connection.close();
+
             return entities;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -94,19 +102,26 @@ public class MacchiatoQueryExecutor {
     public Optional<Object> executeFindById(String id, Class<?> entityClass, String entityTableName) {
         try {
             Object entity = null;
+            
             Connection connection = driverManager.getConnection();
             Statement stmt = connection.createStatement();
-            String query = QueryBuilder.getById(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id);
+
+            String query = QueryBuilder.getById(
+                    entityTableName,
+                    MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass),
+                    id
+            );
             ResultSet rs = stmt.executeQuery(query);
+
             if (rs.next()) {
-                entity = this.createPopulatedEntity(rs, entityClass, entityTableName);
-            } else {
-                return Optional.empty();
+                entity = createEntityWithJoins(rs, entityClass, entityTableName);
             }
+            
             rs.close();
             stmt.close();
             connection.close();
-            return Optional.of(entity);
+
+            return Optional.ofNullable(entity);
         }
         catch(Exception e) {
             throw new MacchiatoException(e.getMessage());
@@ -126,14 +141,19 @@ public class MacchiatoQueryExecutor {
      */
     public Optional<Object> executeSave(Object entity, String entityTableName) {
         HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
+
         String query = QueryBuilder.save(
                 entityTableName,
                 new ArrayList<String>(columnsAndValues.keySet()),
                 new ArrayList<String>(columnsAndValues.values())
         );
 
-        this.execute(query);
-        return executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
+        execute(query);
+        return executeFindById(
+                MacchiatoReflectionTools.getColumnIdValueFromObject(entity),
+                entity.getClass(),
+                entityTableName
+        );
     }
 
     /**
@@ -149,12 +169,22 @@ public class MacchiatoQueryExecutor {
      *               in the table associated with the entity class.
      */
     public Optional<Object> executeUpdate(Object entity, String entityTableName) {
-        Optional<Object> exists = this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
+        Optional<Object> exists = executeFindById(
+                MacchiatoReflectionTools.getColumnIdValueFromObject(entity),
+                entity.getClass(),
+                entityTableName
+        );
+
         if (exists.isEmpty()) {
-            throw new MacchiatoEntityDoesNotExistException(String.format("No entity with id %s exists in %s", MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entityTableName));
+            throw new MacchiatoEntityDoesNotExistException(String.format(
+                    "No entity with id %s exists in %s",
+                    MacchiatoReflectionTools.getColumnIdValueFromObject(entity),
+                    entityTableName
+            ));
         }
+
         HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
-        this.execute(
+        execute(
                 QueryBuilder.update(
                         entityTableName,
                         new ArrayList<String>(columnsAndValues.keySet()),
@@ -163,7 +193,12 @@ public class MacchiatoQueryExecutor {
                         MacchiatoReflectionTools.getColumnIdValueFromObject(entity)
                 )
         );
-        return this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
+
+        return executeFindById(
+                MacchiatoReflectionTools.getColumnIdValueFromObject(entity),
+                entity.getClass(),
+                entityTableName
+        );
     }
 
     /**
@@ -176,24 +211,14 @@ public class MacchiatoQueryExecutor {
      * @param id a String version of the id.
      */
     public void executeDeleteById(String id, Class<?> entityClass, String entityTableName) {
-        Optional<Object> exists = this.executeFindById(id, entityClass, entityTableName);
+        Optional<Object> exists = executeFindById(id, entityClass, entityTableName);
         if (exists.isPresent()) {
-            this.execute(QueryBuilder.delete(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id));
+            execute(QueryBuilder.delete(
+                    entityTableName,
+                    MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass),
+                    id
+            ));
         }
-    }
-
-    /**
-     * Populates and returns a {@code T} entity based on a given result set.
-     * @param rs SQL result set
-     * @return populated entity with the type {@code T}
-     * @throws Exception
-     */
-    private Object createPopulatedEntity(ResultSet rs, Class<?> entityClass, String entityTableName) throws Exception {
-        Object entity = entityClass.getDeclaredConstructor().newInstance();
-        for(Field field : MacchiatoReflectionTools.getListOfFieldsFromClass(entityClass)) {
-            this.populateEntityFieldWithJoinColumn(entity, entityClass, entityTableName, field, rs);
-        }
-        return entity;
     }
 
     /**
@@ -201,14 +226,36 @@ public class MacchiatoQueryExecutor {
      * @param clazz entity class
      * @param rs SQL result set
      * @return populated object entity
-     * @throws Exception
+     * @throws MacchiatoException
      */
-    private Object createPopulatedEntityFromClass(Class clazz, ResultSet rs) throws Exception {
-        Object entity = clazz.getDeclaredConstructor().newInstance();
-        for(Field field : entity.getClass().getDeclaredFields()) {
-            this.populateEntityField(entity, field, rs);
+    private Object createEntity(Class clazz, ResultSet rs) {
+        try {
+            Object entity = clazz.getDeclaredConstructor().newInstance();
+            for(Field field : entity.getClass().getDeclaredFields()) {
+                this.setFieldValue(entity, field, rs);
+            }
+            return entity;
+        } catch (Exception e) {
+            throw new MacchiatoException(e.getMessage());
         }
-        return entity;
+    }
+
+    /**
+     * Populates and returns a {@code T} entity based on a given result set.
+     * @param rs SQL result set
+     * @return populated entity with the type {@code T}
+     * @throws MacchiatoException
+     */
+    private Object createEntityWithJoins(ResultSet rs, Class<?> entityClass, String entityTableName) {
+        try {
+            Object entity = entityClass.getDeclaredConstructor().newInstance();
+            for(Field field : MacchiatoReflectionTools.getListOfFieldsFromClass(entityClass)) {
+                this.setFieldValueWithRelations(entity, entityClass, entityTableName, field, rs);
+            }
+            return entity;
+        } catch (Exception e) {
+            throw new MacchiatoException(e.getMessage());
+        }
     }
 
     /**
@@ -218,12 +265,40 @@ public class MacchiatoQueryExecutor {
      * @param rs SQL result set
      * @throws Exception
      */
-    private void populateEntityField(Object entity, Field field, ResultSet rs) throws Exception {
+    private void setFieldValue(Object entity, Field field, ResultSet rs) {
+        try {
+            if(field.isAnnotationPresent(Column.class)) {
+                field.setAccessible(true);
+                String entityColumnName = field.getAnnotation(Column.class).name();
+                Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
+                field.set(entity, entityColumnValueInDatabase);
+            }
+        } catch (Exception e) {
+            throw new MacchiatoException(e.getMessage());
+        }
+    }
+
+    /**
+     * Populates a given entity field that supports join relationships, based on a given result set.
+     * @param entity object entity
+     * @param field field to be populated
+     * @param rs SQL result set
+     * @throws Exception
+     */
+    private void setFieldValueWithRelations(Object entity, Class<?> entityClass, String entityTableName, Field field, ResultSet rs) throws Exception {
         if(field.isAnnotationPresent(Column.class)) {
             field.setAccessible(true);
             String entityColumnName = field.getAnnotation(Column.class).name();
             Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
             field.set(entity, entityColumnValueInDatabase);
+        }
+        if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
+            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
+            field.set(entity, this.fetchRelatedEntity(entity, entityClass, field.getType(), entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
+        }
+        if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
+            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
+            field.set(entity, this.fetchRelatedEntities(entity, entityClass, joinColumnAnnotation.referencedClass(), entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
         }
     }
 
@@ -240,7 +315,7 @@ public class MacchiatoQueryExecutor {
      * @param joinColumn foreign key.
      * @return singular foreign entity related to the primary entity.
      */
-    private Object joinSingular(Object entity, Class<?> entityClass,  Class joinClass, String table, String joinTable, String joinColumn) {
+    private Object fetchRelatedEntity(Object entity, Class<?> entityClass,  Class joinClass, String table, String joinTable, String joinColumn) {
         Object foundEntity = null;
 
         try {
@@ -257,7 +332,7 @@ public class MacchiatoQueryExecutor {
 
             if (rs != null) {
                 rs.next();
-                foundEntity = this.createPopulatedEntityFromClass(joinClass, rs);
+                foundEntity = this.createEntity(joinClass, rs);
             }
 
             rs.close();
@@ -285,7 +360,7 @@ public class MacchiatoQueryExecutor {
      * @param joinColumn foreign key
      * @return a list of foreign entities related to the primary entity.
      */
-    private List<Object> joinMany(Object entity, Class<?> entityClass, Class joinClass, String table, String joinTable, String joinColumn) {
+    private List<Object> fetchRelatedEntities(Object entity, Class<?> entityClass, Class joinClass, String table, String joinTable, String joinColumn) {
         List<Object> foundEntities = new ArrayList<>();
 
         try {
@@ -302,40 +377,17 @@ public class MacchiatoQueryExecutor {
                     )
             );
             while(rs.next()) {
-                foundEntities.add(this.createPopulatedEntityFromClass(joinClass, rs));
+                foundEntities.add(this.createEntity(joinClass, rs));
             }
             rs.close();
             stmt.close();
             connection.close();
         }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (SQLException e) {
+            throw new MacchiatoException(e.getMessage());
         }
 
         return foundEntities;
     }
 
-    /**
-     * Populates a given entity field that supports join relationships, based on a given result set.
-     * @param entity object entity
-     * @param field field to be populated
-     * @param rs SQL result set
-     * @throws Exception
-     */
-    private void populateEntityFieldWithJoinColumn(Object entity, Class<?> entityClass, String entityTableName, Field field, ResultSet rs) throws Exception {
-        if(field.isAnnotationPresent(Column.class)) {
-            field.setAccessible(true);
-            String entityColumnName = field.getAnnotation(Column.class).name();
-            Object entityColumnValueInDatabase = rs.getObject(entityColumnName);
-            field.set(entity, entityColumnValueInDatabase);
-        }
-        if(field.isAnnotationPresent(JoinColumn.class) && field.isAnnotationPresent(OneToOne.class)) {
-            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinSingular(entity, entityClass, field.getType(), entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
-        }
-        if(field.isAnnotationPresent(JoinColumn.class) && (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToOne.class))) {
-            JoinColumn joinColumnAnnotation = field.getAnnotation(JoinColumn.class);
-            field.set(entity, this.joinMany(entity, entityClass, joinColumnAnnotation.referencedClass(), entityTableName, joinColumnAnnotation.table(), joinColumnAnnotation.column()));
-        }
-    }
 }

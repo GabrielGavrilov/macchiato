@@ -11,8 +11,9 @@ public class Macchiato {
     }
 
     public static MacchiatoDriverManager getDriverManager() {
-        if (macchiatoDriverManager == null)
+        if (macchiatoDriverManager == null) {
             throw new MacchiatoConfigurationException("DataSource has not been initialized");
+        }
         return macchiatoDriverManager;
     }
 

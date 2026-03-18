@@ -15,12 +15,12 @@ public class MacchiatoRepository<T> {
     private final MacchiatoQueryExecutor queryExecutor;
 
     public MacchiatoRepository() {
-        this.queryExecutor = new MacchiatoQueryExecutor(Macchiato.getDriverManager());
+        queryExecutor = new MacchiatoQueryExecutor(Macchiato.getDriverManager());
     }
 
     public List<T> findAll() {
         return queryExecutor
-                .executeFindAll(this.entityClass, this.entityTableName)
+                .executeFindAll(entityClass, entityTableName)
                 .stream()
                 .map(e -> (T) e)
                 .collect(Collectors.toList());
@@ -28,24 +28,24 @@ public class MacchiatoRepository<T> {
 
     public Optional<T> findById(String id) {
         return queryExecutor
-                .executeFindById(id, this.entityClass, this.entityTableName)
+                .executeFindById(id, entityClass, entityTableName)
                 .map(e -> (T) e);
     }
 
     public Optional<T> save(T entity) {
         return queryExecutor
-                .executeSave(entity, this.entityTableName)
+                .executeSave(entity, entityTableName)
                 .map(e -> (T) e);
     }
 
     public Optional<T> update(Object entity) {
         return queryExecutor
-                .executeUpdate(entity, this.entityTableName)
+                .executeUpdate(entity, entityTableName)
                 .map(e -> (T) e);
     }
 
     public void deleteById(String id) {
-        queryExecutor.executeDeleteById(id, this.entityClass, this.entityTableName);
+        queryExecutor.executeDeleteById(id, entityClass, entityTableName);
     }
 
     public void delete(Object entity) {
