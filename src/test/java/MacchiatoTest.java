@@ -4,10 +4,12 @@ import core.repositories.TodoRepository;
 import core.repositories.UserRepository;
 import org.gabrielgavrilov.macchiato.Macchiato;
 import org.gabrielgavrilov.macchiato.MacchiatoQueryExecutor;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConstraintViolationException;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoEntityDoesNotExistException;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.swing.text.html.Option;
 import java.sql.*;
 import java.util.List;
 import java.util.Optional;
@@ -80,7 +82,7 @@ public class MacchiatoTest {
         userRepository.save(john);
         userRepository.save(jane);
 
-        List<User> users = userRepository.getAll();
+        List<User> users = userRepository.findAll();
 
         assertEquals(2, users.size());
         assertAll(
@@ -95,7 +97,7 @@ public class MacchiatoTest {
         todoRepository.save(foo);
         todoRepository.save(bar);
 
-        List<Todo> entities = todoRepository.getAll();
+        List<Todo> entities = todoRepository.findAll();
         Todo entity = entities.get(1);
 
         assertEquals(2, entities.size());
@@ -110,7 +112,7 @@ public class MacchiatoTest {
 
     @Test
     public void testMacchiatoRepository_getAll_withNoEntities_shouldReturnAnEmptyList() {
-        List<User> users = userRepository.getAll();
+        List<User> users = userRepository.findAll();
         assertEquals(0, users.size());
     }
 
@@ -186,7 +188,7 @@ public class MacchiatoTest {
 
     @Test
     public void testMacchiatoRepository_update_withNoEntity_shouldThrowRuntimeException() {
-        assertThrows(RuntimeException.class, () -> userRepository.update(john));
+        assertThrows(MacchiatoEntityDoesNotExistException.class, () -> userRepository.update(john));
 //        assertFalse(userRepository.update(john).isPresent());
     }
 
@@ -211,13 +213,11 @@ public class MacchiatoTest {
 
     @Test
     public void testMacchiatoRepository_delete_withJoinColumn_deleteForeignEntity_shouldNotDeleteForeignEntity() {
-        // TODO: maybe throw error?
         userRepository.save(john);
         todoRepository.save(foo);
-        assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
-        assertThrows(RuntimeException.class, () -> userRepository.delete(john));
-//        assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
-//        assertNotNull(userRepository.findById(String.valueOf(john.userId)));
+        assertTrue(todoRepository.findById(String.valueOf(foo.todoId)).isPresent());
+        assertThrows(MacchiatoConstraintViolationException.class, () -> userRepository.delete(john));
+        assertTrue(todoRepository.findById(String.valueOf(foo.todoId)).isPresent());
     }
 
     private void execute(String query) {

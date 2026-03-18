@@ -1,6 +1,10 @@
 package org.gabrielgavrilov.macchiato;
 
 import org.gabrielgavrilov.macchiato.annotations.*;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConnectionException;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConstraintViolationException;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoEntityDoesNotExistException;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoException;
 
 import java.lang.reflect.Field;
 import java.sql.*;
@@ -32,11 +36,29 @@ public class MacchiatoQueryExecutor {
             stmt.close();
             connection.close();
         }
-        catch(Exception e) {
-            throw new RuntimeException(e);
+        catch (SQLIntegrityConstraintViolationException e) {
+            throw new MacchiatoConstraintViolationException(e.getMessage());
+        }
+        catch (SQLNonTransientConnectionException | SQLTransientConnectionException e) {
+            throw new MacchiatoConnectionException(e.getMessage());
+        }
+        catch(SQLException e) {
+            throw new MacchiatoException(e.getMessage());
         }
     }
 
+    /**
+     * Retrieves all entities from the database and returns them as a list.
+     * <p>
+     * This method constructs a query to fetch all records from the table associated
+     * with the entity class, executes the query, and populates a list of entities
+     * from the result set. In case of any exceptions during the query execution or
+     * entity population, the exception is caught and its stack trace is printed.
+     * </p>
+     *
+     * @return A list of all entities of type {@code T} retrieved from the database.
+     *         If no entities are found, an empty list will be returned.
+     */
     public List<Object> executeFindAll(Class<?> entityClass, String entityTableName) {
         try {
             List<Object> entities = new ArrayList<>();
@@ -56,6 +78,19 @@ public class MacchiatoQueryExecutor {
         }
     }
 
+    /**
+     * Retrieves an entity from the database with the given id and returns it.
+     * <p>
+     * This method constructs a query to fetch a singular record from the table associated
+     * with the entity class, executes the query, and populates a new entity from the result set.
+     * In case of any exceptions during the query execution or entity population, the exception is
+     * caught and its stack trace is printed.
+     * </p>
+     *
+     * @param id a String version of the id.
+     * @return An entity with the type {@code T} retrieved from the database.
+     *         If no entity was found, null type {@code T} will be returned.
+     */
     public Optional<Object> executeFindById(String id, Class<?> entityClass, String entityTableName) {
         try {
             Object entity = null;
@@ -74,10 +109,21 @@ public class MacchiatoQueryExecutor {
             return Optional.of(entity);
         }
         catch(Exception e) {
-            throw new RuntimeException(e);
+            throw new MacchiatoException(e.getMessage());
         }
     }
 
+    /**
+     * Saves the given object entity into the database.
+     * <p>
+     * This method constructs a query to insert a new record into the table associated
+     * with the entity class and executes it. In case of any exceptions during the query execution,
+     * the exception is caught and its stack trace is printed.
+     * </p>
+     *
+     * @param entity a constructed object of the entity that's to be saved
+     *               in the table associated with the entity class.
+     */
     public Optional<Object> executeSave(Object entity, String entityTableName) {
         HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
         String query = QueryBuilder.save(
@@ -90,11 +136,22 @@ public class MacchiatoQueryExecutor {
         return executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
     }
 
+    /**
+     * Updates the given object entity that's already stored in the database. If entity does
+     * not exist in the table, it will call the save() method instead.
+     * <p>
+     * This method constructs a query to update an existing record in the table associated
+     * with the entity class and executes it. In case of any exceptions during the query execution,
+     * the exception is caught and the stack trace is printed.
+     * </p>
+     *
+     * @param entity a constructed object of the entity that's to be updated
+     *               in the table associated with the entity class.
+     */
     public Optional<Object> executeUpdate(Object entity, String entityTableName) {
         Optional<Object> exists = this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
         if (exists.isEmpty()) {
-            // Todo: change?
-            throw new RuntimeException("Entity does not exist");
+            throw new MacchiatoEntityDoesNotExistException(String.format("No entity with id %s exists in %s", MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entityTableName));
         }
         HashMap<String, String> columnsAndValues = MacchiatoReflectionTools.mapColumnNamesToValuesFromObject(entity);
         this.execute(
@@ -109,9 +166,18 @@ public class MacchiatoQueryExecutor {
         return this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
     }
 
+    /**
+     * Finds a stored entity in the table with the given id and deletes it.
+     * <p>
+     * This method constructs a query to delete an existing entity with the given id
+     * in the table associated with the entity class, and executes it. In case of any exceptions
+     * during the query execution, the exception is caught and the stack trace is printed.
+     * </p>
+     * @param id a String version of the id.
+     */
     public void executeDeleteById(String id, Class<?> entityClass, String entityTableName) {
-        Object exists = this.executeFindById(id, entityClass, entityTableName);
-        if (exists != null) {
+        Optional<Object> exists = this.executeFindById(id, entityClass, entityTableName);
+        if (exists.isPresent()) {
             this.execute(QueryBuilder.delete(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id));
         }
     }

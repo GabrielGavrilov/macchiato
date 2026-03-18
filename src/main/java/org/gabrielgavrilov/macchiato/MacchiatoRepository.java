@@ -18,19 +18,7 @@ public class MacchiatoRepository<T> {
         this.queryExecutor = new MacchiatoQueryExecutor(Macchiato.getDriverManager());
     }
 
-    /**
-     * Retrieves all entities from the database and returns them as a list.
-     * <p>
-     * This method constructs a query to fetch all records from the table associated
-     * with the entity class, executes the query, and populates a list of entities
-     * from the result set. In case of any exceptions during the query execution or
-     * entity population, the exception is caught and its stack trace is printed.
-     * </p>
-     *
-     * @return A list of all entities of type {@code T} retrieved from the database.
-     *         If no entities are found, an empty list will be returned.
-     */
-    public List<T> getAll() {
+    public List<T> findAll() {
         return queryExecutor
                 .executeFindAll(this.entityClass, this.entityTableName)
                 .stream()
@@ -38,82 +26,28 @@ public class MacchiatoRepository<T> {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves an entity from the database with the given id and returns it.
-     * <p>
-     * This method constructs a query to fetch a singular record from the table associated
-     * with the entity class, executes the query, and populates a new entity from the result set.
-     * In case of any exceptions during the query execution or entity population, the exception is
-     * caught and its stack trace is printed.
-     * </p>
-     *
-     * @param id a String version of the id.
-     * @return An entity with the type {@code T} retrieved from the database.
-     *         If no entity was found, null type {@code T} will be returned.
-     */
     public Optional<T> findById(String id) {
         return queryExecutor
                 .executeFindById(id, this.entityClass, this.entityTableName)
                 .map(e -> (T) e);
     }
 
-    /**
-     * Saves the given object entity into the database.
-     * <p>
-     * This method constructs a query to insert a new record into the table associated
-     * with the entity class and executes it. In case of any exceptions during the query execution,
-     * the exception is caught and its stack trace is printed.
-     * </p>
-     *
-     * @param entity a constructed object of the entity that's to be saved
-     *               in the table associated with the entity class.
-     */
     public Optional<T> save(T entity) {
         return queryExecutor
                 .executeSave(entity, this.entityTableName)
                 .map(e -> (T) e);
     }
 
-    /**
-     * Updates the given object entity that's already stored in the database. If entity does
-     * not exist in the table, it will call the save() method instead.
-     * <p>
-     * This method constructs a query to update an existing record in the table associated
-     * with the entity class and executes it. In case of any exceptions during the query execution,
-     * the exception is caught and the stack trace is printed.
-     * </p>
-     *
-     * @param entity a constructed object of the entity that's to be updated
-     *               in the table associated with the entity class.
-     */
     public Optional<T> update(Object entity) {
         return queryExecutor
                 .executeUpdate(entity, this.entityTableName)
                 .map(e -> (T) e);
     }
 
-    /**
-     * Finds a stored entity in the table with the given id and deletes it.
-     * <p>
-     * This method constructs a query to delete an existing entity with the given id
-     * in the table associated with the entity class, and executes it. In case of any exceptions
-     * during the query execution, the exception is caught and the stack trace is printed.
-     * </p>
-     * @param id a String version of the id.
-     */
     public void deleteById(String id) {
         queryExecutor.executeDeleteById(id, this.entityClass, this.entityTableName);
     }
 
-    /**
-     * Finds a stored entity in the table with the given constructed object of the entity and deletes it.
-     * <p>
-     * This method gets the id value from the given constructed object of the entity
-     * and calls the deleteById() method.
-     * </p>
-     * @param entity constructed object of the entity that is to be deleted
-     *               from the table associated with the entity class.
-     */
     public void delete(Object entity) {
         deleteById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
     }

@@ -1,8 +1,8 @@
 package org.gabrielgavrilov.macchiato;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConnectionException;
+
+import java.sql.*;
 
 public class MacchiatoDriverManager {
 
@@ -16,8 +16,7 @@ public class MacchiatoDriverManager {
         try {
             return DriverManager.getConnection(databaseUrl);
         } catch (SQLException e) {
-            // Todo: throw custom
-            throw new RuntimeException(e);
+            throw new MacchiatoConnectionException(e.getMessage());
         }
     }
 

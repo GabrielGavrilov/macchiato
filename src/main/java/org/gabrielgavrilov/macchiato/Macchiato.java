@@ -1,5 +1,7 @@
 package org.gabrielgavrilov.macchiato;
 
+import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConfigurationException;
+
 public class Macchiato {
 
     private static MacchiatoDriverManager macchiatoDriverManager;
@@ -9,10 +11,8 @@ public class Macchiato {
     }
 
     public static MacchiatoDriverManager getDriverManager() {
-        if (macchiatoDriverManager == null) {
-            // fix this
-            throw new IllegalStateException("DataSource has not been initialized");
-        }
+        if (macchiatoDriverManager == null)
+            throw new MacchiatoConfigurationException("DataSource has not been initialized");
         return macchiatoDriverManager;
     }
 
