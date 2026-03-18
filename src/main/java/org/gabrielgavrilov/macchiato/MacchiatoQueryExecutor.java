@@ -109,6 +109,13 @@ public class MacchiatoQueryExecutor {
         return this.executeFindById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity), entity.getClass(), entityTableName);
     }
 
+    public void executeDeleteById(String id, Class<?> entityClass, String entityTableName) {
+        Object exists = this.executeFindById(id, entityClass, entityTableName);
+        if (exists != null) {
+            this.execute(QueryBuilder.delete(entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(entityClass), id));
+        }
+    }
+
     /**
      * Populates and returns a {@code T} entity based on a given result set.
      * @param rs SQL result set

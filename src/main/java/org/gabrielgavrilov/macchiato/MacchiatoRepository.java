@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class MacchiatoRepository<T> {
 
@@ -30,17 +31,11 @@ public class MacchiatoRepository<T> {
      *         If no entities are found, an empty list will be returned.
      */
     public List<T> getAll() {
-        List<T> entities = new ArrayList<>();
-
-        try {
-            entities = (List<T>) queryExecutor.executeFindAll(entityClass, entityTableName);
-
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        return entities;
+        return queryExecutor
+                .executeFindAll(this.entityClass, this.entityTableName)
+                .stream()
+                .map(e -> (T) e)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -107,15 +102,7 @@ public class MacchiatoRepository<T> {
      * @param id a String version of the id.
      */
     public void deleteById(String id) {
-        try {
-            Object exists = this.findById(id);
-            if (exists != null) {
-                this.queryExecutor.execute(QueryBuilder.delete(this.entityTableName, MacchiatoReflectionTools.getColumnIdNameFromClass(this.entityClass), id));
-            }
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+        queryExecutor.executeDeleteById(id, this.entityClass, this.entityTableName);
     }
 
     /**
@@ -128,12 +115,7 @@ public class MacchiatoRepository<T> {
      *               from the table associated with the entity class.
      */
     public void delete(Object entity) {
-        try {
-            this.deleteById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+        deleteById(MacchiatoReflectionTools.getColumnIdValueFromObject(entity));
     }
 
 }

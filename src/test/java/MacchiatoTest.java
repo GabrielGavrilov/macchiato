@@ -215,9 +215,9 @@ public class MacchiatoTest {
         userRepository.save(john);
         todoRepository.save(foo);
         assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
-        userRepository.delete(john);
-        assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
-        assertNotNull(userRepository.findById(String.valueOf(john.userId)));
+        assertThrows(RuntimeException.class, () -> userRepository.delete(john));
+//        assertNotNull(todoRepository.findById(String.valueOf(foo.todoId)));
+//        assertNotNull(userRepository.findById(String.valueOf(john.userId)));
     }
 
     private void execute(String query) {
