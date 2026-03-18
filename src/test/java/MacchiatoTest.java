@@ -6,7 +6,6 @@ import org.gabrielgavrilov.macchiato.Macchiato;
 import org.gabrielgavrilov.macchiato.MacchiatoQueryExecutor;
 import org.gabrielgavrilov.macchiato.exceptions.MacchiatoConstraintViolationException;
 import org.gabrielgavrilov.macchiato.exceptions.MacchiatoEntityDoesNotExistException;
-import org.gabrielgavrilov.macchiato.exceptions.MacchiatoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
