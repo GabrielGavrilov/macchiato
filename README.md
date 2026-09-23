@@ -46,7 +46,7 @@ Macchiato.initialize( "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
 
 **Macchiato does not create new tables. You must create tables and establish relationships before using Macchiato**
 
-You can check out the <a href="https://github.com/GabrielGavrilov/macchiato/tree/master/src/test/java/core">example</a> in the source code as a reference.
+Check out the <a href="https://github.com/GabrielGavrilov/macchiato/tree/master/src/test/java/core">example</a> in the source code as a reference.
 
 ### Repository
 
